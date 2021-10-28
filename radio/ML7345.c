@@ -259,13 +259,6 @@ void Ber_PinExit_Init(void)
     EXTI_CR2 &= (~MASK_EXTI_CR2_P6IS);
     //EXTI_CR2 |= 0x08 << 2;   // 下降沿触发
     EXTI_CR2 |= 0x04 << 2;  //上升沿
-    /*
-    ADF7030_GPIO3_DDR = Input; //输入
-    ADF7030_GPIO3_CR1 = 0;     //1: Input with pull-up 0: Floating input
-    ADF7030_GPIO3_CR2 = 1;     //使能中断
-    EXTI_CR2 &= (~MASK_EXTI_CR2_P4IS);
-   // EXTI_CR2 |= 0x02;
-    EXTI_CR2 |= 0x01;  */
 }
 
 void Ber_Exit_UnInit(void)
@@ -330,7 +323,7 @@ void DataReceive(void)
                 X_ERR++;
             X_COUNT++;
             X_HISbyte ^= 1;
-            if (X_COUNT >= 500)
+            if (X_COUNT >= 1000)
                 StateCache = 2;
         }
         break;
@@ -346,9 +339,9 @@ void DataReceive(void)
 
 void RF_Ber_Test(void)
 {
-    if (X_COUNT >= 500)
+    if (X_COUNT >= 1000)
     {
-        if (X_ERR >= 5) RX_LED = 0;
+        if (X_ERR >= 50) RX_LED = 0;
         else            RX_LED = 1;
         X_ERR = 0;
         X_COUNT = 0;
@@ -558,14 +551,14 @@ void ML7345D_RF_test_mode(void)
         test_flag = 1;
         Receiver_LED_OUT = 0;
         ClearWDT();   // Service the WDT
-        if (TP4 == 0) //test ADF7030 TX
+        if (TP4 == 0) //test  TX
         {
             if (TP3 == 0)
                 Tx_Rx_mode = 0;
             else
                 Tx_Rx_mode = 1;
         }
-        else //test ADF7030 RX
+        else //test  RX
         {
             if (TP3 == 0)
                 Tx_Rx_mode = 2;
@@ -608,7 +601,7 @@ void ML7345D_RF_test_mode(void)
                 }
             }
         }
-        //else  {           //test ADF7021 RX
+        //else  {           //test  RX
         if ((Tx_Rx_mode == 2) || (Tx_Rx_mode == 3))
         {
             FG_test_rx = 1;
