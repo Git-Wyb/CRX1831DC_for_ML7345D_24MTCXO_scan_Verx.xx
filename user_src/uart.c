@@ -12,6 +12,7 @@
 #include "ram.h"		  // RAM定义
 #include "eeprom.h"		  // eeprom
 #include "uart.h"
+#include "ML7345.h"
 #define TXD1_enable (USART1_CR2 = 0x08) // 允许发�??
 #define RXD1_enable (USART1_CR2 = 0x24) // 允许接收及其中断
 
@@ -89,20 +90,22 @@ void UART1_RX_RXNE(void)
 	unsigned char dat;
 	dat = USART1_DR; // 接收数据
 					 //Send_char(dat);
-	ReceiveFrame(dat);
-	// if (dat == '(')
-	// 	SIO_cnt = 0;
-	// SIO_buff[SIO_cnt] = dat;
-	// SIO_cnt = (SIO_cnt + 1) & 0x1F;
-	// if (dat == ')')
-	// {
-	// 	for (dat = 0; dat < SIO_cnt; dat++)
-	// 	{
-	// 		SIO_DATA[dat] = SIO_buff[dat];
-	// 	}
-	// 	BIT_SIO = 1; // 标志
-	// 				 //SIO_TOT = 20;
-	// }
+	if(Flag_test_mode == 0) ReceiveFrame(dat);
+    else
+    {
+        if (dat == '(') SIO_cnt = 0;
+        SIO_buff[SIO_cnt] = dat;
+        SIO_cnt = (SIO_cnt + 1) & 0x1F;
+        if (dat == ')')
+        {
+            for (dat = 0; dat < SIO_cnt; dat++)
+	       	{
+                SIO_DATA[dat] = SIO_buff[dat];
+            }
+            BIT_SIO = 1; // 标志
+            //SIO_TOT = 20;
+        }
+    }
 }
 
 //--------------------------------------------
@@ -179,6 +182,8 @@ unsigned char asc_hex_2(unsigned char asc1, unsigned char asc0)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+unsigned char re_byte = 0;
+u32 PROFILE_CH_FREQ_32bit_200002EC_uart = 0;
 void PC_PRG(void) // 串口命令
 {
 	unsigned int i, j;
@@ -188,98 +193,97 @@ void PC_PRG(void) // 串口命令
 	{
 		BIT_SIO = 0;
 		//SIO_TOT = 20;
-		switch (SIO_DATA[1])
-		{
-		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		//%                 写操�?              %
-		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		case 'W':
-			//==================================== ADF7012
-			if (SIO_DATA[2] == 'I') // (WIxd0d1d2d3)
-			{
-				i = asc_hex_2(0x30, SIO_buff[3]);
-				d0 = asc_hex_2(SIO_buff[4], SIO_buff[5]);
-				d1 = asc_hex_2(SIO_buff[6], SIO_buff[7]);
-				d2 = asc_hex_2(SIO_buff[8], SIO_buff[9]);
-				d3 = asc_hex_2(SIO_buff[10], SIO_buff[11]);
-
-				//write Rx
-				ROM_adf7030_value[i].byte[0] = d0;
-				ROM_adf7030_value[i].byte[1] = d1;
-				ROM_adf7030_value[i].byte[2] = d2;
-				ROM_adf7030_value[i].byte[3] = d3;
-				//ttset dd_write_7021_reg(&ROM_adf7030_value[i].byte[0]);
-				Delayus(122); //delay 40us
-
-				//-------------------------------- 保存
-				if (i == 1)
-				{
-					j = 0x380 + i * 4;
-					UnlockFlash(UNLOCK_EEPROM_TYPE);
-					WriteByteToFLASH(addr_eeprom_sys + j, d0);
-					WriteByteToFLASH(addr_eeprom_sys + j + 1, d1);
-					WriteByteToFLASH(addr_eeprom_sys + j + 2, d2);
-					WriteByteToFLASH(addr_eeprom_sys + j + 3, d3);
-					LockFlash(UNLOCK_EEPROM_TYPE);
-
-					ClearWDT(); // Service the WDT
-				}
-				//-------------------------------返回  (WHx)
-				d1 = '(';
-				d2 = 'W';
-				Send_char(d1);
-				Send_char(d2);
-				d1 = 'I';
-				d2 = ')';
-				Send_char(d1);
-				Send_char(d2);
-				Send_char(SIO_buff[3]);
-			}
-
-			//==================================== ADF7012 TX/RX调试
-			if (SIO_DATA[2] == 'J') // (WJx)
-			{
-				Tx_Rx_mode = asc_hex_2(0x30, SIO_buff[3]);
-				//-------------------------------返回  (WHx)
-				d1 = '(';
-				d2 = 'W';
-				Send_char(d1);
-				Send_char(d2);
-				d1 = 'J';
-				d2 = ')';
-				Send_char(d1);
-				Send_char(d2);
-				Send_char(SIO_buff[3]);
-			}
-			break;
-		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		//%                 读操�?              %
-		//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		case 'R':
-			//==================================== ADF7012   //(RIx)
-			if (SIO_DATA[2] == 'I') // (RI)d0d1d2d3
-			{
-				i = asc_hex_2(0x30, SIO_buff[3]);
-				d1 = '(';
-				d2 = 'R';
-				Send_char(d1);
-				Send_char(d2);
-				d1 = 'I';
-				d2 = ')';
-				Send_char(d1);
-				Send_char(d2);
-				for (j = 0; j < 4; j++)
-				{
-					d1 = hex_asc(ROM_adf7030_value[i].byte[j] / 16);
-					d2 = hex_asc(ROM_adf7030_value[i].byte[j] % 16);
-					Send_char(d1);
-					Send_char(d2);
-				}
-			}
-			break;
-		default:
-			break;
-		}
+        switch(SIO_DATA[1])
+        {
+            case 'S':
+                ML7345_SetAndGet_State(Force_TRX_OFF);
+                FG_test_mode = 0;
+                Tx_Data_Test(0);    //发载波
+                d0 = '(';
+                d1 = 'O';
+                d2 = 'K';
+                d3 = ')';
+                Send_char(d0);
+                Send_char(d1);
+                Send_char(d2);
+                Send_char(d3);
+                break;
+            case 'E':
+                if(SIO_DATA[2] == 'N' && SIO_DATA[3] == 'D')
+                {
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    FG_test_mode = 0;
+                    d0 = '(';
+                    d1 = 'O';
+                    d2 = 'K';
+                    d3 = ')';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                }
+                break;
+            case 'F':
+                if(SIO_DATA[2]=='M')  //载波+调制
+                {
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    FG_test_mode = 1;
+                    Tx_Data_Test(1);
+                    d0 = '(';
+                    d1 = 'O';
+                    d2 = 'K';
+                    d3 = ')';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                }
+                else if(SIO_DATA[2]=='C' && SIO_DATA[3]=='?')
+                {
+                    d0 = '(';
+                    d1 = 'F';
+                    d2 = 'C';
+                    d3 = ')';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                    d0 = hex_asc(Freq_SetBuff[8] / 16);
+                    d1 = hex_asc(Freq_SetBuff[8] % 16);
+                    Send_char(d0);
+                    Send_char(d1);
+                }
+                else if (SIO_DATA[2]=='C' && FG_test_mode == 1)
+                {
+                    re_byte = asc_hex_2(SIO_buff[3],SIO_buff[4]);
+                    if(re_byte <= 10)
+                    {
+                        Freq_SetBuff[8] = re_byte;
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426075000 + 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Freq_SetBuff);
+                        ML7345_Frequency_Set(Freq_SetBuff,1);
+                    }
+                    else if(10 < re_byte && re_byte <= 20)
+                    {
+                        Freq_SetBuff[8] = re_byte;
+                        re_byte = re_byte - 10;
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426075000 - 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Freq_SetBuff);
+                        ML7345_Frequency_Set(Freq_SetBuff,1);
+                    }
+                    ML7345_SetAndGet_State(TRX_OFF);
+                    Tx_Data_Test(1);
+                    d0 = '(';
+                    d1 = 'O';
+                    d2 = 'K';
+                    d3 = ')';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                }
+                break;
+        }
 	}
 }
 void ReceiveFrame(UINT8 Cache)
@@ -292,7 +296,7 @@ void ReceiveFrame(UINT8 Cache)
 		UART_DATA_buffer[1] = UART_DATA_buffer[2];
 		UART_DATA_buffer[2] = Cache;
 		if ((UART_DATA_buffer[0] == FrameHead) &&
-			(UART_DATA_buffer[2] == FrameSingnalID))	
+			(UART_DATA_buffer[2] == FrameSingnalID))
 		{
 			U1Statues = ReceivingStatues;
 			UartStatus++;
@@ -321,11 +325,11 @@ void ReceiveFrame(UINT8 Cache)
 		UartCount = 0;
 		//        Receiver_LED_OUT_INV = !Receiver_LED_OUT_INV;
 		if((Databits_t.ID_No == 147)||(Databits_t.ID_No == 152)) U1Statues = IdelStatues;
-		else 
+		else
 		{
 			U1Statues = ReceiveDoneStatues;
 		    U1AckTimer = U1AckDelayTime;
-		    U1Busy_OUT = 1;			
+		    U1Busy_OUT = 1;
 		}
 
 	}
@@ -351,11 +355,11 @@ void OprationFrame(void)
 		switch (Databits_t.Mode)
 		{
 		case 3:
-		case 4:	
-		case 5:	
+		case 4:
+		case 5:
 		case 6:
-		case 7:	
-		case 8:			
+		case 7:
+		case 8:
 			break;
 		default:
 			ACKBack[2] = 1;
@@ -364,10 +368,10 @@ void OprationFrame(void)
 		}
 		switch (Databits_t.Statues)
 		{
-		case 1: 
-		case 2: 
+		case 1:
+		case 2:
 		case 3:
-		case 4: 
+		case 4:
 		case 5:
 		case 6:
 			break;
@@ -388,8 +392,8 @@ void OprationFrame(void)
 		case 0x49:
 		case 0x4A:
 		case 0x4B:
-		case 0x4C:	
-		case 0x4D:		
+		case 0x4C:
+		case 0x4D:
 			break;
 		default:
 			ACKBack[2] = 1;
@@ -406,7 +410,7 @@ void OprationFrame(void)
 		Time_error_read_timeout=(UART_DATA_ID98[1]+1)*7;
 		ERROR_Read_sendTX_count=0;
 		ERROR_Read_sendTX_packet=0;
-		Time_error_read_gap=38;	
+		Time_error_read_gap=38;
 	}
 	else if (Databits_t.ID_test_No91or93 == 145)  //0x91
 	{
@@ -419,25 +423,25 @@ void OprationFrame(void)
 			FLAG_testNo91SendUart=0;
 			TIME_TestNo91=1000;
 	    	}
-		else 
+		else
 			{
 			ACKBack[2] = 1;
 			FLAG_testNo91=2;
-			TIME_TestNo91=1000;	
+			TIME_TestNo91=1000;
 			FLAG_testBEEP=1;
 			}
-	}	
+	}
 	else if (Databits_t.ID_test_No91or93 == 147)  //0x93
 	{
 		switch (Databits_t.SWorOUT)
 		{
 		case 0x01:
 			DATA_Packet_Control=0x08;
-			TIMER1s = 1000;	
+			TIMER1s = 1000;
 			break;
 		case 0x02:
 			DATA_Packet_Control=0x04;
-			TIMER1s = 1000;		
+			TIMER1s = 1000;
 			break;
 		case 0x04:
 			DATA_Packet_Control=0x02;
@@ -449,14 +453,14 @@ void OprationFrame(void)
 		case 0xFB:
 			FLAG_testBEEP=2;
 			break;
-		case 0xFC:	
+		case 0xFC:
 			FLAG_testBEEP=3;
 			break;
 		default:
 			break;
 		}
 
-	}	
+	}
 	else
 	{
 		ACKBack[2] = 1;
@@ -483,5 +487,5 @@ void TranmissionACK(void)
 		Send_Data(Send_err_com, 7);
 		Flag_ERROR_Read_once_again=0;
 		TIME_ERROR_Read_once_again=0;
-	}			
+	}
 }

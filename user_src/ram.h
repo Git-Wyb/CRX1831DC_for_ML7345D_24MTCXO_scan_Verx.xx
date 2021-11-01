@@ -137,6 +137,7 @@ extern u8 Display_key_SW3;
 
 extern u16 TIME_TestNo91;
 extern u16 TIME_power_led;
+extern u8 write_flash_buffer[8];
 
 
 extern ADF70XX_REG_T ROM_adf7030_value[16];
@@ -247,7 +248,9 @@ extern Mark_Un mark0_stu;
 #define Flag_RxDone      mark0_stu.un_var_bit7
 
 extern Mark_Un mark1_stu;
-#define Flag_tx_once     mark1_stu.un_var_bit0
+#define Flag_test_mode   mark1_stu.un_var_bit0
+#define Flag_rx_rssi     mark1_stu.un_var_bit1
+#define Flag_test_fm     mark1_stu.un_var_bit2
 
 
 #endif

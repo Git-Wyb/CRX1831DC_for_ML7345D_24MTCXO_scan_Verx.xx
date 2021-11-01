@@ -25,7 +25,7 @@
 #include "Pin_define.h"   // 管脚定义
 #include "initial.h"      // 初始�?  预定�?
 #include "ram.h"          // RAM定义
-#include "ML7345.h"    // 初始化ADF7021
+#include "ML7345.h"
 #include "Timer.h"        // 定时�?
 #include "ID_Decode.h"    // ID_Decode处理
 #include "eeprom.h"       // eeprom
@@ -68,14 +68,15 @@ void main(void)
     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
     TIME_power_led=500;
     ClearWDT();        // Service the WDT
+    _EI();
     ML7345D_RF_test_mode();
     FLAG_APP_RX = 1;
     FG_Receiver_LED_RX = 0;
     TIME_EMC = 10;
     FLAG_testNo91=0;
 	FLAG_testBEEP=0;
-    _EI();
     ML7345_SetAndGet_State(RX_ON);
+    CG2214M6_USE_R;
 
     while (1)
     {

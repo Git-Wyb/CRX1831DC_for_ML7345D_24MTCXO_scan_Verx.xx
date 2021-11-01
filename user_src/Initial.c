@@ -65,18 +65,21 @@ void VHF_GPIO_INIT(void) // CPU端口设置
     PIN_BEEP = 0;
 
     LED_GPIO_Init();
+    CG2214M6_GPIO_Init();
     Receiver_OUT_GPIO_Init(); // Output   受信机继电器
 
     ML7345_INT_GPIO2_DDR = 0;   //输入
     ML7345_INT_GPIO2_CR1 = 1;
-    ML7345_INT_GPIO2_CR2 = 1;   //开启中断
+    ML7345_INT_GPIO2_CR2 = 1;   //开启中断 ;
     EXTI_CR2 &= (~MASK_EXTI_CR2_P5IS);
     EXTI_CR2 |= 0x08;   //下降沿触发
 
-    /* 硬件复位脚 */
+    /* ML7345D硬件复位脚 */
     ML7345_RESETN_DDR = 1;
     ML7345_RESETN_CR1 = 1;
     ML7345_RESETN_CR2 = 1;
+
+    Ber_PinExit_Init();
 }
 //============================================================================================
 void SysClock_Init(void)

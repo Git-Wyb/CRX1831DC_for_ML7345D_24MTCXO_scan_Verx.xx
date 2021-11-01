@@ -10,22 +10,14 @@
 #include "type_def.h"
 #include "uart.h"
 
-//BANK0 0x6E: 426.075 0x3F; 429.350 0x4C; 429.550 0x4D
-//u8 Fre_426_075[11] = {0x23,0x08,0x19,0x99,0x23,0x07,0x91,0x11,0x04,0x3E,0x4A}; //426.075MHz频率设置 1#
-//u8 Fre_429_350[11] = {0x23,0x0C,0x77,0x77,0x23,0x0B,0xEE,0xEF,0x04,0x4B,0x56}; //429.350MHz频率设置 1#
-//u8 Fre_429_550[11] = {0x23,0x0C,0xBB,0xBC,0x23,0x0C,0x33,0x33,0x04,0x4B,0x56}; //429.550MHz频率设置 1#
-//24M
 //ROHM demo板 main fre=426.25;Vco Cal Range:425.85 - 431.85.MHz
-u8 Fre_426_075[11] = {0x23,0x08,0x19,0x99,0x23,0x07,0x91,0x11,0x04,0x18,0x24}; //426.075MHz频率设置 2#
-u8 Fre_429_350[11] = {0x23,0x0C,0x77,0x77,0x23,0x0B,0xEE,0xEF,0x04,0x24,0x30}; //429.350MHz频率设置 2#
-u8 Fre_429_550[11] = {0x23,0x0C,0xBB,0xBC,0x23,0x0C,0x33,0x33,0x04,0x26,0x30}; //429.550MHz频率设置 2#
-u8 Fre_426_750[11] = {0x23,0x09,0x00,0x00,0x23,0x08,0x77,0x77,0x04,0x40,0x4C}; //426.750MHz频率设置,24M TCXO
-u8 Fre_429_175[11] = {0x23,0x0c,0x3b,0xbc,0x23,0x0b,0xb3,0x33,0x04}; //429.175MHz频率设置,24M TCXO
-u8 Fre_429_200[11] = {0x23,0x0c,0x44,0x44,0x23,0x0b,0xbb,0xbc,0x04}; //429.200MHz频率设置
-
-//26M
-//u8 Fre_426_750[11] = {0x20,0x0D,0x3B,0x13,0x20,0x0C,0xBD,0x0C,0x04}; //426.750MHz频率设置,26M TCXO
-//u8 Fre_429_175[11] = {0x21,0x00,0x37,0x23,0x20,0x0F,0xB9,0x1B,0x04}; //429.175MHz频率设置,26M TCXO
+//TCXO = 24M
+u8 Fre_426_075[11] = {0x23,0x08,0x19,0x99,0x23,0x07,0x91,0x11}; //426.075MHz频率设置
+u8 Fre_429_350[11] = {0x23,0x0C,0x77,0x77,0x23,0x0B,0xEE,0xEF}; //429.350MHz频率设置
+u8 Fre_429_550[11] = {0x23,0x0C,0xBB,0xBC,0x23,0x0C,0x33,0x33}; //429.550MHz频率设置
+u8 Fre_426_750[11] = {0x23,0x09,0x00,0x00,0x23,0x08,0x77,0x77}; //426.750MHz频率设置
+u8 Fre_429_175[11] = {0x23,0x0c,0x3b,0xbc,0x23,0x0b,0xb3,0x33}; //429.175MHz频率设置
+u8 Fre_429_200[11] = {0x23,0x0c,0x44,0x44,0x23,0x0b,0xbb,0xbc}; //429.200MHz频率设置
 
 u8 FilterChar[2][1] = {
     {' '},
@@ -58,6 +50,8 @@ u8 APP_TX_freq=0;
 u8 TX_Scan_step=0;
 u8 First_TX_Scan=0;
 u8 TX_Scan_count=0;
+
+u8 Freq_SetBuff[9] = {0};
 /*
 Function: RF Init
 Parameter: Null
@@ -106,7 +100,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     /* Preamble */
     ML7345_Write_Reg(0x3f,0x05);    /* Preamble pattern setting,p198*/
 
-    ML7345_Write_Reg(0x41,0x88);    /* 0x80Enable ED value calculation,bit3=0 ED value constantly updated,bit3=1 ED value acquired at SyncWord detection timing*/
+    ML7345_Write_Reg(0x41,0x8B);    /* 0x80Enable ED value calculation,bit3=0 ED value constantly updated,bit3=1 ED value acquired at SyncWord detection timing*/
 
     ML7345_Write_Reg(0x42,0x00);    //TX前导码长度高八位
     ML7345_Write_Reg(0x43,0x50);    //TX前导码长度低八位,不等少于16个位,TX preamble length = (specified value x2) bits
@@ -177,7 +171,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x4e,freq[5]);    /* VCO calibration low limit frequency setting (F counter high 4bits) */
     ML7345_Write_Reg(0x4f,freq[6]);    /* VCO calibration low limit frequency setting (F counter middle byte) */
     ML7345_Write_Reg(0x50,freq[7]);    /* VCO calibration low limit frequency setting (F counter low byte) */
-    ML7345_Write_Reg(0x51,freq[8]);    /* 6 MHz,VCO calibration upper limit frequency setting */
+    ML7345_Write_Reg(0x51,0x04);    /* 6 MHz,VCO calibration upper limit frequency setting */
     ML7345_Write_Reg(0x52,0x5a);    /* VCO calibration low limit value indication and setting */
     ML7345_Write_Reg(0x53,0x66);    /* VCO calibration upper limit value indication and setting */
 
@@ -348,69 +342,6 @@ void RF_Ber_Test(void)
     }
 }
 
-void RF_ML7345_TEST(void)
-{
-    u8 Tx_Rx_Mode = 0;
-    u8 sw = 0;
-
-    while(TP7_TEST_MODE == 0)
-    {
-        sw = Key_Scan();
-        switch(sw)
-        {
-            case Key1_press:    //发载波
-                Tx_Rx_Mode = 1;
-                ML7345_CLK_CR2 = 0; //关闭中断
-                ML7345_SetAndGet_State(Force_TRX_OFF);
-                Tx_Data_Test(0);
-                TX_LED = 1;
-                break;
-            case Key3_press:    //发数据0101
-                Tx_Rx_Mode = 2;
-                ML7345_SetAndGet_State(Force_TRX_OFF);
-                ML7345_CLK_CR2 = 0; //关闭中断
-                Tx_Data_Test(1);
-                TX_LED = 1;
-                break;
-            case Key2_press:    //接收，误码率测试
-                Tx_Rx_Mode = 3;
-                Ber_PinExit_Init();
-                ML7345_MeasurBER_Init();
-                ML7345_SetAndGet_State(RX_ON);
-                _EI();
-                TX_LED = 1;
-                break;
-            default:
-                break;
-        }
-        if(Key_Tx_Carrier==1 && Key_Tx_Data==1 && Key_Rx_Data==1)
-        {
-            TX_LED = 0;
-        }
-        if(Tx_Rx_Mode == 3)
-        {
-            RF_Ber_Test();
-        }
-    }
-    if(Tx_Rx_Mode != 0)
-    {
-        ML7345_SetAndGet_State(Force_TRX_OFF);
-        Ber_Exit_UnInit();
-        RF_ML7345_Init(Fre_426_075,0x55,12);
-    }
-    TX_LED = 0;
-    RX_LED = 0;
-    ClearWDT();
-    ML7345_GPIO1RxDoneInt_Enable(); /* 开启接收完成中断,ML7345D GPIO1中断输出 */
-    ML7345_GPIO1TxDoneInt_Enable(); /* 开启发送完成中断,ML7345D GPIO1中断输出 */
-}
-
-
-
-
-
-
-
 void APP_TX_PACKET(void)
 {
     char rssi;
@@ -543,12 +474,11 @@ void APP_TX_PACKET(void)
 //--------------------------------------------------------------------------------------------------
 void ML7345D_RF_test_mode(void)
 {
-	 Receiver_LED_OUT = 1;
-    u8 test_flag = 0;
-
+    Receiver_LED_OUT = 1;
+    Flag_test_mode = 0;
     while (Receiver_test == 0)
     {
-        test_flag = 1;
+        Flag_test_mode = 1;
         Receiver_LED_OUT = 0;
         ClearWDT();   // Service the WDT
         if (TP4 == 0) //test  TX
@@ -567,6 +497,7 @@ void ML7345D_RF_test_mode(void)
         }
         if ((Tx_Rx_mode == 0) || (Tx_Rx_mode == 1))
         {
+            CG2214M6_USE_T;
             FG_test_rx = 0;
             Receiver_LED_RX = 0;
             FG_test_tx_off = 0;
@@ -578,7 +509,6 @@ void ML7345D_RF_test_mode(void)
                 if (FG_test_tx_on == 0)
                 {
                     FG_test_tx_on = 1;
-                    ML7345_CLK_CR2 = 0; //关闭中断
                     ML7345_SetAndGet_State(Force_TRX_OFF);
                     Tx_Data_Test(0);
                 }
@@ -596,7 +526,6 @@ void ML7345D_RF_test_mode(void)
                 {
                     FG_test_tx_1010 = 1;
                     ML7345_SetAndGet_State(Force_TRX_OFF);
-                    ML7345_CLK_CR2 = 0; //关闭中断
                     Tx_Data_Test(1);
                 }
             }
@@ -604,6 +533,7 @@ void ML7345D_RF_test_mode(void)
         //else  {           //test  RX
         if ((Tx_Rx_mode == 2) || (Tx_Rx_mode == 3))
         {
+            CG2214M6_USE_R
             FG_test_rx = 1;
             Receiver_LED_TX = 0;
             FG_test_mode = 0;
@@ -615,8 +545,6 @@ void ML7345D_RF_test_mode(void)
                 ML7345_SetAndGet_State(Force_TRX_OFF);
                 ML7345_MeasurBER_Init();
                 ML7345_SetAndGet_State(RX_ON);
-                Ber_PinExit_Init();
-                _EI();
             }
             if (Tx_Rx_mode == 2) //packet usart out put RSSI
             {
@@ -632,13 +560,15 @@ void ML7345D_RF_test_mode(void)
                 RF_Ber_Test();
             }
         }
+        //PC_PRG();
     }
-    if(test_flag == 1)
+    if(Flag_test_mode == 1)
     {
         ML7345_SetAndGet_State(TRX_OFF);
-        Ber_Exit_UnInit();
         RF_ML7345_Init(Fre_426_075,0x55,12);
     }
+    Ber_Exit_UnInit();
+    Flag_test_mode = 0;
     ML7345_GPIO2RxDoneInt_Enable(); /* 开启接收完成中断,ML7345D GPIO2中断输出 */
     ML7345_GPIO2TxDoneInt_Enable(); /* 开启发送完成中断,ML7345D GPIO2中断输出 */
     FG_test_rx = 0;
@@ -684,7 +614,7 @@ void ML7345d_Change_Channel(void)
             case 3:
                     Radio_Date_Type = 2;
                     PROFILE_CH_FREQ_32bit_200002EC = PROFILE_CH2_FREQ_32bit_429HighSpeed;
-                    ML7345_Frequency_Set(Fre_429_550,Radio_Date_Type); //Fre_429_550
+                    ML7345_Frequency_Set(Fre_429_550,Radio_Date_Type);
                     Channels = 4;
                     break;
 
@@ -738,6 +668,7 @@ void ML7345_TRX_Del(void)
             else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000)   {RF_ML7345_Init(Fre_429_550,0x15,28); TIMER300ms = 100;}
             ML7345_GPIO2RxDoneInt_Enable();
             ML7345_SetAndGet_State(RX_ON);
+            CG2214M6_USE_R;
         }
         Flag_rx_pream = 1;
         ML7345_Write_Reg(ADDR_INT_SOURCE_GRP2,0x00); //清接收完成标志
@@ -793,6 +724,7 @@ void SCAN_RECEIVE_PACKET(void)
         ML7345_Write_Reg(0x2a,0x55);    //sync
         ML7345_Write_Reg(0x00,0x11);    // Bank0 Set
         ML7345_SetAndGet_State(RX_ON);
+        CG2214M6_USE_R;
         Flag_rx_pream = 0;
         Receiver_LED_RX = 1;
         TIMER300ms = 300;
@@ -827,6 +759,15 @@ void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf)
     pbuf[1] = (cal_val >> 16) & 0xff;
     pbuf[2] = (cal_val >> 8) & 0xff;
     pbuf[3] = cal_val & 0xff;
+
+    Freq = Freq - VCO_LowerLimit_FREQ;
+    integer = (u8)(Freq / FREQ_PLL);
+    f_dec = ((float)(Freq / (float)FREQ_PLL) - integer);
+    cal_val = (u32)(f_dec *  CONST_COEFF);
+    pbuf[4] = integer;
+    pbuf[5] = (cal_val >> 16) & 0xff;
+    pbuf[6] = (cal_val >> 8) & 0xff;
+    pbuf[7] = cal_val & 0xff;
 }
 
 void TX_DataLoad(u32 IDCache, u8 CtrCmd, u8 *Packet)

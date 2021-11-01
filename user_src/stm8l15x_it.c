@@ -403,7 +403,7 @@ INTERRUPT_HANDLER(USART1_RX_TIM5_CC_IRQHandler, 28)
   /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-  UART1_RX_RXNE();
+    UART1_RX_RXNE();
 }
 
 /**
