@@ -218,11 +218,11 @@ void LED_GPIO_Init(void)
 void CG2214M6_GPIO_Init(void)
 {
     CG2214M6_VC1_DDR = Output; /* 设置数据方向寄存�?1为输出，0为输�?-查看STM8寄存器RM0031.pdf 10.9 */
-    CG2214M6_VC1_CR1 = 1;      /* 设置推挽输出--查看STM8寄存器RM0031.pdf 10.9*/
+    CG2214M6_VC1_CR1 = 0;      /* Only open drain */
     CG2214M6_VC1_CR2 = 1;      /* 设置输出频率 1�?0M�?�?M--查看STM8寄存�?pdf P89 */
 
     CG2214M6_VC2_DDR = Output; /* 设置数据方向寄存�?1为输出，0为输�?-查看STM8寄存�?RM0031.pdf 10.9 */
-    CG2214M6_VC2_CR1 = 1;      /* 设置推挽输出--查看STM8寄存器RM0031.pdf 10.9*/
+    CG2214M6_VC2_CR1 = 0;      /* Only open drain */
     CG2214M6_VC2_CR2 = 1;      /* 设置输出频率 1�?0M�?�?M--查看STM8寄存�?pdf P89 */
 }
 /**

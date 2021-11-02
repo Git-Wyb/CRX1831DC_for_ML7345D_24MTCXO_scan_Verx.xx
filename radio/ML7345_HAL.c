@@ -40,18 +40,19 @@ u8 ML7345_SetAndGet_State(RF_StatusSet_ENUM sta)
         {
             ML7345_Write_Reg(ADDR_RF_STATUS,sta);
             status = WaitStatus_Complete();
-            if(status != 0)
+            if(status != 0 && sta != Force_TRX_OFF)
             {
-                if(PROFILE_CH_FREQ_32bit_200002EC == 426075000) RF_ML7345_Init(Fre_426_075,0x55,12);
-                else if (PROFILE_CH_FREQ_32bit_200002EC == 429350000) RF_ML7345_Init(Fre_429_350,0x55,28);
-                else if (PROFILE_CH_FREQ_32bit_200002EC == 429550000) RF_ML7345_Init(Fre_429_550,0x55,28);
+                ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC,Freq_SetBuff);
+                ClearWDT();
+                if(PROFILE_CH_FREQ_32bit_200002EC < 429000000)  RF_ML7345_Init(Freq_SetBuff,0x55,12);
+                else    RF_ML7345_Init(Freq_SetBuff,0x55,28);
+                ClearWDT();
                 ML7345_Write_Reg(ADDR_RF_STATUS,sta);
                 WaitStatus_Complete();
             }
             status = ML7345_Read_Reg(ADDR_RF_STATUS) >> 4;
         }
     }
-
     return status;
 }
 
@@ -68,6 +69,7 @@ u8 WaitStatus_Complete(void)
             return 0;
         }
         if(count++ > 5000)    return 1;
+        ClearWDT();
     }
 }
 
@@ -292,8 +294,6 @@ void ML7345_Frequency_Set(u8 *freq,u8 radio_type)
     }
 
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL); /* Bank0 Set */
-    ML7345_SetAndGet_State(RX_ON);
-    CG2214M6_USE_R;
     Flag_set_freq = 0;
 }
 
@@ -491,4 +491,27 @@ u8 RF_SyncWord_DONE(void)
     sync = ML7345_Read_Reg(ADDR_INT_SOURCE_GRP2);
 
     return sync;
+}
+
+void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf)  //将频率计算为ML7345寄存器设定值,存入pbuf中
+{
+    u8 integer = 0;
+    float f_dec = 0.0;
+    u32 cal_val = 0;
+    integer = (u8)(Freq / FREQ_PLL);
+    f_dec = ((float)(Freq / (float)FREQ_PLL) - integer);
+    cal_val = (u32)(f_dec *  CONST_COEFF);
+    pbuf[0] = integer;
+    pbuf[1] = (cal_val >> 16) & 0xff;
+    pbuf[2] = (cal_val >> 8) & 0xff;
+    pbuf[3] = cal_val & 0xff;
+
+    Freq = Freq - VCO_LowerLimit_FREQ;
+    integer = (u8)(Freq / FREQ_PLL);
+    f_dec = ((float)(Freq / (float)FREQ_PLL) - integer);
+    cal_val = (u32)(f_dec *  CONST_COEFF);
+    pbuf[4] = integer;
+    pbuf[5] = (cal_val >> 16) & 0xff;
+    pbuf[6] = (cal_val >> 8) & 0xff;
+    pbuf[7] = cal_val & 0xff;
 }

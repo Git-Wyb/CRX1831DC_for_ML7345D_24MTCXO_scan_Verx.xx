@@ -510,6 +510,7 @@ void ML7345D_RF_test_mode(void)
                 {
                     FG_test_tx_on = 1;
                     ML7345_SetAndGet_State(Force_TRX_OFF);
+                    ML7345_Frequency_Set(Fre_429_175,1);
                     Tx_Data_Test(0);
                 }
             }
@@ -526,6 +527,7 @@ void ML7345D_RF_test_mode(void)
                 {
                     FG_test_tx_1010 = 1;
                     ML7345_SetAndGet_State(Force_TRX_OFF);
+                    ML7345_Frequency_Set(Fre_429_175,1);
                     Tx_Data_Test(1);
                 }
             }
@@ -533,7 +535,7 @@ void ML7345D_RF_test_mode(void)
         //else  {           //test  RX
         if ((Tx_Rx_mode == 2) || (Tx_Rx_mode == 3))
         {
-            CG2214M6_USE_R
+            CG2214M6_USE_R;
             FG_test_rx = 1;
             Receiver_LED_TX = 0;
             FG_test_mode = 0;
@@ -543,6 +545,7 @@ void ML7345D_RF_test_mode(void)
             {
                 FG_test_tx_off = 1;
                 ML7345_SetAndGet_State(Force_TRX_OFF);
+                ML7345_Frequency_Set(Fre_426_750,1);
                 ML7345_MeasurBER_Init();
                 ML7345_SetAndGet_State(RX_ON);
             }
@@ -567,6 +570,7 @@ void ML7345D_RF_test_mode(void)
         ML7345_SetAndGet_State(TRX_OFF);
         RF_ML7345_Init(Fre_426_075,0x55,12);
     }
+    PROFILE_CH_FREQ_32bit_200002EC = 426075000;
     Ber_Exit_UnInit();
     Flag_test_mode = 0;
     ML7345_GPIO2RxDoneInt_Enable(); /* 开启接收完成中断,ML7345D GPIO2中断输出 */
@@ -591,6 +595,8 @@ void ML7345d_Change_Channel(void)
         Radio_Date_Type=1;
         Channels=1;
         ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);
+        ML7345_SetAndGet_State(RX_ON);
+        CG2214M6_USE_R;
     }
     else
     {
@@ -600,6 +606,8 @@ void ML7345d_Change_Channel(void)
                     Radio_Date_Type = 1;
                     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
                     ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);       //加上VCO校准后用时5ms，不加1.2ms
+                    ML7345_SetAndGet_State(RX_ON);
+                    CG2214M6_USE_R;
                     if(ID_SCX1801_DATA == 0) Channels = 1;
                     else Channels = 2;
                     break;
@@ -608,6 +616,8 @@ void ML7345d_Change_Channel(void)
                     Radio_Date_Type = 2;
                     PROFILE_CH_FREQ_32bit_200002EC = PROFILE_CH1_FREQ_32bit_429HighSpeed;
                     ML7345_Frequency_Set(Fre_429_350,Radio_Date_Type);
+                    ML7345_SetAndGet_State(RX_ON);
+                    CG2214M6_USE_R;
                     Channels = 3;
                     break;
 
@@ -615,6 +625,8 @@ void ML7345d_Change_Channel(void)
                     Radio_Date_Type = 2;
                     PROFILE_CH_FREQ_32bit_200002EC = PROFILE_CH2_FREQ_32bit_429HighSpeed;
                     ML7345_Frequency_Set(Fre_429_550,Radio_Date_Type);
+                    ML7345_SetAndGet_State(RX_ON);
+                    CG2214M6_USE_R;
                     Channels = 4;
                     break;
 
@@ -622,6 +634,8 @@ void ML7345d_Change_Channel(void)
                     Radio_Date_Type = 1;
                     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
                     ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);
+                    ML7345_SetAndGet_State(RX_ON);
+                    CG2214M6_USE_R;
                     Channels = 1;
                     break;
 
@@ -747,28 +761,6 @@ void ML7345D_Error_Detect(void)
     }
 }
 
-void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf)
-{
-    u8 integer = 0;
-    float f_dec = 0.0;
-    u32 cal_val = 0;
-    integer = (u8)(Freq / FREQ_PLL);
-    f_dec = ((float)(Freq / (float)FREQ_PLL) - integer);
-    cal_val = (u32)(f_dec *  CONST_COEFF);
-    pbuf[0] = integer;
-    pbuf[1] = (cal_val >> 16) & 0xff;
-    pbuf[2] = (cal_val >> 8) & 0xff;
-    pbuf[3] = cal_val & 0xff;
-
-    Freq = Freq - VCO_LowerLimit_FREQ;
-    integer = (u8)(Freq / FREQ_PLL);
-    f_dec = ((float)(Freq / (float)FREQ_PLL) - integer);
-    cal_val = (u32)(f_dec *  CONST_COEFF);
-    pbuf[4] = integer;
-    pbuf[5] = (cal_val >> 16) & 0xff;
-    pbuf[6] = (cal_val >> 8) & 0xff;
-    pbuf[7] = cal_val & 0xff;
-}
 
 void TX_DataLoad(u32 IDCache, u8 CtrCmd, u8 *Packet)
 {

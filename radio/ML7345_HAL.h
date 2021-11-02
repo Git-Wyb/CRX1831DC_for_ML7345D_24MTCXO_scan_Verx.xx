@@ -35,7 +35,7 @@ typedef enum{
     TX_ON = 0x09,           /* TX Enable*/
     RX_ON = 0x06,           /* RX Enable */
     TRX_OFF = 0x08,         /* RF OFF*/
-    Force_TRX_OFF = 0x03    /* force RF OFFsetting */
+    Force_TRX_OFF = 0x03    /* force RF OFFsetting,*Not waiting for the completion of the state transition*/
 }RF_StatusSet_ENUM;
 
 typedef enum{
@@ -77,6 +77,7 @@ void ML7345_AutoTx_Data(u8 *pbuf,u8 len);
 u8 RF_SyncWord_DONE(void);
 void ML7345_DataRate_Set_4_8k(void);
 void ML7345_DataRate_Set_1_2k(void);
+void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf);
 
 
 #endif
