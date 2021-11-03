@@ -100,7 +100,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     /* Preamble */
     ML7345_Write_Reg(0x3f,0x05);    /* Preamble pattern setting,p198*/
 
-    ML7345_Write_Reg(0x41,0x8B);    /* 0x80Enable ED value calculation,bit3=0 ED value constantly updated,bit3=1 ED value acquired at SyncWord detection timing*/
+    ML7345_Write_Reg(0x41,0x8B);    /* Enable ED value calculation,bit3=0 ED value constantly updated,bit3=1 ED value acquired at SyncWord detection timing*/
 
     ML7345_Write_Reg(0x42,0x00);    //TX前导码长度高八位
     ML7345_Write_Reg(0x43,0x50);    //TX前导码长度低八位,不等少于16个位,TX preamble length = (specified value x2) bits
@@ -116,9 +116,9 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
 
     ML7345_Write_Reg(0x63,0x88);    /* Fine adjustment of load capacitance for oscillation circuits */
 
-    ML7345_Write_Reg(0x67,0x02);    /* 02功率设置0dbm */
+    ML7345_Write_Reg(0x67,0x16);    /* 功率设置11dbm */
     ML7345_Write_Reg(0x68,0x10);    /* PA regulator fine adjustment */
-    ML7345_Write_Reg(0x69,0x00);    /* PA gain adjustment */
+    ML7345_Write_Reg(0x69,0x02);    /* PA gain adjustment */
 
     ML7345_Write_Reg(0x6e,0x5b);    /*5b VCO calibration setting or status indication */
 
@@ -163,7 +163,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
 
     ML7345_Write_Reg(0x2f,0x08);    /* GFSK clock setting x8 clock,GFSK/FSK modulation timing resolution setting */
     ML7345_Write_Reg(0x30,0x00);    /* GFSK frequency deviation setting (high 6bits) */
-    ML7345_Write_Reg(0x31,0xd1);    /* P71  GFSK frequency deviation:2.4KHz,GFSK frequency deviation setting (low byte) */
+    ML7345_Write_Reg(0x31,0xAE);    /* P71  GFSK frequency deviation:2.0KHz,GFSK frequency deviation setting (low byte) */
 
     /*(Channel#0 frequency-400khz)426.075:0x23 0x07 0x91 0x11;
     426.25:0x23 0x07 0xcc 0xcc */
