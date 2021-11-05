@@ -482,14 +482,7 @@ u8 RF_SyncWord_DONE(void)
 {
     u8 sync = 0;
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);  //set bank0
-   /* if((ML7345_Read_Reg(ADDR_INT_SOURCE_GRP2) & 0x20) != 0)
-    {
-        sync = 1;                             //0xDF
-        ML7345_Write_Reg(ADDR_INT_SOURCE_GRP2,0x00);//clear SyncWord detection flag
-    }
-    else    sync = 0;*/
     sync = ML7345_Read_Reg(ADDR_INT_SOURCE_GRP2);
-
     return sync;
 }
 

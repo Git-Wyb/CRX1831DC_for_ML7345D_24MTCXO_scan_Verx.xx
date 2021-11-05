@@ -61,7 +61,6 @@ Return: Null
    发射功率0dBm */
 void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
 {
-    //RF_WORKE_MODE = 0;
     ML7345_RESETN_SET();    /* Hardware Reset */
     while(1){
         if(ML7345_Read_Reg(0x0Du)&0x01u){   /* Wait Clock stabilization completion */
@@ -105,7 +104,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x42,0x00);    //TX前导码长度高八位
     ML7345_Write_Reg(0x43,0x50);    //TX前导码长度低八位,不等少于16个位,TX preamble length = (specified value x2) bits
     //-----------------------------------------------------------------------------------------------------
-    ML7345_Write_Reg(0x45,0x00);    //0x10接收前导码长度(bit) RX preamble setting and ED threshold check setting
+    ML7345_Write_Reg(0x45,0x08);    //接收前导码长度(bit) RX preamble setting and ED threshold check setting
     //-----------------------------------------------------------------------------------------------------
     ML7345_Write_Reg(0x4e,0x00);    /* GPIO0 [output] “L” level */
     ML7345_Write_Reg(0x4f,0x00);    /* GPIO1 [output] “L” level,Upon reset,disable GPIO1 pin is CLK_OUT function */
@@ -113,6 +112,8 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x51,0x00);    /* GPIO3 [output] “L” level */
 
     ML7345_Write_Reg(0x54,0x14);    /* Channel filter bandwidth setting */
+
+    ML7345_Write_Reg(0x60,0x06); /* Decimation gain setting 提高灵敏度 */
 
     ML7345_Write_Reg(0x63,0x88);    /* Fine adjustment of load capacitance for oscillation circuits */
 
@@ -209,16 +210,6 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
             break;
         }
     }
-    /*
-    ML7345_Write_Reg(0x00, 0x22); // BANK_SEL(BANK1)
-    read_reg = ML7345_Read_Reg(0x51);
-    read_reg = ML7345_Read_Reg(0x52);
-    read_reg = ML7345_Read_Reg(0x53);
-
-    ML7345_Write_Reg(0x00, 0x11);     // BANK_SEL(BANK0)
-    read_reg = ML7345_Read_Reg(0x6E);*/
-
-    ML7345_Write_Reg(0x60,0x06); /* Decimation gain setting 提高灵敏度 */
     ML7345_AllStateFlag_Clear(); //清除所有标志
 }
 
@@ -398,7 +389,7 @@ void APP_TX_PACKET(void)
 					  FLAG_Key_TP3=0;
 					  Last_Uart_Struct_DATA_Packet_Contro=Uart_Struct_DATA_Packet_Contro;
 					  Last_Uart_Struct_DATA_Packet_Contro.Fno_Type.UN.type=1;
-					  rssi=RAM_RSSI_AVG/128;
+					  rssi=RAM_RSSI_AVG;///128;
 					  rssi=-rssi;
 					  if(rssi>=127)rssi=127;
 					  if(Radio_Date_Type_bak==2)rssi= rssi | 0x80;
@@ -413,6 +404,9 @@ void APP_TX_PACKET(void)
 					  APP_TX_freq=0;
 					  TX_Scan_step=1;
 					  First_TX_Scan=0;
+
+                      RSSI_Read_Counter = 0;
+                      RAM_RSSI_SUM = 0;
 	  }
     if(FLAG_APP_TX == 1)
     {
@@ -452,6 +446,7 @@ void APP_TX_PACKET(void)
 				   Time_APP_RXstart=1;
 				   Receiver_LED_TX = 0;
 				   FLAG_APP_TX_once=0;
+                   Flag_tx_en = 0;
 				}
 		   }
     }
@@ -459,7 +454,6 @@ void APP_TX_PACKET(void)
     {
         FLAG_APP_RXstart = 0;
         FLAG_APP_RX = 1;
-        Flag_tx_en = 0;
     }
     else if(Flag_tx_en == 1 && Time_Tx_Out == 0 && Flag_TxDone == 0 && FLAG_APP_RXstart == 0)
     {
@@ -581,7 +575,7 @@ void ML7345D_RF_test_mode(void)
     Receiver_LED_RX = 0;
     FG_Receiver_LED_RX = 0;
     //Receiver_LED_OUT = 0;
-
+    Time_rf_init = 1000;
     FLAG_APP_RX = 1;
     TIME_Fine_Calibration = 900;
     TIME_EMC = 10;
@@ -651,12 +645,23 @@ void ML7345D_Freq_Scanning(void)
     {
         if(Flag_FREQ_Scan)  return;
         ML7345d_Change_Channel();
+        if(Time_rf_init == 0)
+        {
+            Time_rf_init = 1000;
+            if(PROFILE_CH_FREQ_32bit_200002EC == 426075000) RF_ML7345_Init(Fre_426_075,0x55,12);
+            else if(PROFILE_CH_FREQ_32bit_200002EC == 429350000) RF_ML7345_Init(Fre_429_350,0x55,28);
+            else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000) RF_ML7345_Init(Fre_429_550,0x55,28);
+            ML7345_GPIO2RxDoneInt_Enable();
+            ML7345_SetAndGet_State(RX_ON);
+        }
 
         if(Radio_Date_Type==1)
             TIMER18ms = 18;
         else if(Radio_Date_Type > 1)
             TIMER18ms = 18;
         Flag_rx_pream = 0;
+        RSSI_Read_Counter = 0;
+        RAM_RSSI_SUM = 0;
 
     }else Flag_FREQ_Scan = 0;
 }
@@ -721,6 +726,7 @@ void RX_ANALYSIS(void)
 
 void SCAN_RECEIVE_PACKET(void)
 {
+    short Cache;
     if(Flag_RxDone)
     {
         Flag_RxDone = 0;
@@ -733,7 +739,13 @@ void SCAN_RECEIVE_PACKET(void)
         ML7345_StateFlag_Clear(RX_DONE_FLAG);
         RX_ANALYSIS();
         Flag_FREQ_Scan = 0;
+
         ML7345_SetAndGet_State(TRX_OFF);
+        Cache = ML7345_Read_Reg(ADDR_ED_RSLT);
+        RAM_RSSI_SUM += Cache;
+        RSSI_Read_Counter++;
+        RAM_RSSI_AVG = RAM_RSSI_SUM / RSSI_Read_Counter;
+
         ML7345_Write_Reg(0x00,0x22);    // Bank1 Set
         ML7345_Write_Reg(0x2a,0x55);    //sync
         ML7345_Write_Reg(0x00,0x11);    // Bank0 Set

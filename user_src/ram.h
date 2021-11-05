@@ -217,6 +217,7 @@ extern u16 Time_error_read_timeout;
 extern u8 ERROR_Read_sendTX_count;
 extern u8 ERROR_Read_sendTX_packet;
 extern u8 Flag_ERROR_Read_once_again;
+extern u16 Time_rf_init;
 
 //-----------------------------------------------------------------------------------------------
 typedef union{
@@ -250,7 +251,6 @@ extern Mark_Un mark0_stu;
 extern Mark_Un mark1_stu;
 #define Flag_test_mode   mark1_stu.un_var_bit0
 #define Flag_rx_rssi     mark1_stu.un_var_bit1
-#define Flag_test_fm     mark1_stu.un_var_bit2
 
 
 #endif
