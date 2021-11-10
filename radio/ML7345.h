@@ -37,13 +37,14 @@ extern u8 Rx_Done;
 extern u8 reg1_val[128];
 extern u8 reg2_val[128];
 
-extern u8 Fre_426_075[11];
-extern u8 Fre_426_750[11];
-extern u8 Fre_429_550[11];
-extern u8 Fre_429_350[11];
-extern u8 Fre_429_175[11];
-extern u8 Fre_429_200[11];
-extern u8 Freq_SetBuff[9];
+extern u8 Fre_426_075[8];
+extern u8 Fre_426_750[8];
+extern u8 Fre_429_550[8];
+extern u8 Fre_429_350[8];
+extern u8 Fre_429_175[8];
+extern u8 Fre_429_200[8];
+extern u8 Freq_SetBuff[8];
+extern u8 rf_offset;
 
 extern u8 tx_pack_cnt;
 

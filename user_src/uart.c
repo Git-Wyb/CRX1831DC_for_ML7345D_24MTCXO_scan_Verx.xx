@@ -93,7 +93,7 @@ void UART1_RX_RXNE(void)
 	if(Flag_test_mode == 0) ReceiveFrame(dat);
     else
     {
-        if (dat == '(') SIO_cnt = 0;
+        if(dat == '(') SIO_cnt = 0;
         SIO_buff[SIO_cnt] = dat;
         SIO_cnt = (SIO_cnt + 1) & 0x1F;
         if (dat == ')')
@@ -182,14 +182,13 @@ unsigned char asc_hex_2(unsigned char asc1, unsigned char asc0)
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-unsigned char re_byte = 0;
 u32 PROFILE_CH_FREQ_32bit_200002EC_uart = 0;
 void PC_PRG(void) // 串口命令
 {
-	unsigned int i, j;
 	unsigned char d3, d2, d1, d0;
+    unsigned char re_byte = 0;
 
-	if (BIT_SIO)
+    if (BIT_SIO)
 	{
 		BIT_SIO = 0;
 		//SIO_TOT = 20;
@@ -197,7 +196,9 @@ void PC_PRG(void) // 串口命令
         {
             case 'S':
                 ML7345_SetAndGet_State(Force_TRX_OFF);
-                FG_test_mode = 0;
+                Flag_test_fm = 0;
+                CG2214M6_USE_T;
+                ML7345_Frequency_Set(Fre_429_175,1);
                 Tx_Data_Test(0);    //发载波
                 d0 = '(';
                 d1 = 'O';
@@ -212,7 +213,7 @@ void PC_PRG(void) // 串口命令
                 if(SIO_DATA[2] == 'N' && SIO_DATA[3] == 'D')
                 {
                     ML7345_SetAndGet_State(Force_TRX_OFF);
-                    FG_test_mode = 0;
+                    Flag_test_fm = 0;
                     d0 = '(';
                     d1 = 'O';
                     d2 = 'K';
@@ -227,7 +228,9 @@ void PC_PRG(void) // 串口命令
                 if(SIO_DATA[2]=='M')  //载波+调制
                 {
                     ML7345_SetAndGet_State(Force_TRX_OFF);
-                    FG_test_mode = 1;
+                    Flag_test_fm = 1;
+                    CG2214M6_USE_T;
+                    ML7345_Frequency_Set(Fre_429_175,1);
                     Tx_Data_Test(1);
                     d0 = '(';
                     d1 = 'O';
@@ -248,30 +251,33 @@ void PC_PRG(void) // 串口命令
                     Send_char(d1);
                     Send_char(d2);
                     Send_char(d3);
-                    d0 = hex_asc(Freq_SetBuff[8] / 16);
-                    d1 = hex_asc(Freq_SetBuff[8] % 16);
+                    d0 = hex_asc(rf_offset / 16);
+                    d1 = hex_asc(rf_offset % 16);
                     Send_char(d0);
                     Send_char(d1);
                 }
-                else if (SIO_DATA[2]=='C' && FG_test_mode == 1)
+                else if (SIO_DATA[2]=='C' && Flag_test_fm == 1)
                 {
                     re_byte = asc_hex_2(SIO_buff[3],SIO_buff[4]);
-                    if(re_byte <= 10)
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    CG2214M6_USE_T;
+                    if(re_byte <= 10) //frequency +
                     {
-                        Freq_SetBuff[8] = re_byte;
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426075000 + 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Freq_SetBuff);
-                        ML7345_Frequency_Set(Freq_SetBuff,1);
+                        rf_offset = re_byte;
+                        eeprom_write_byte(Addr_rf_offset,rf_offset);
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 + 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
+                        ML7345_Frequency_Set(Fre_429_175,1);
                     }
-                    else if(10 < re_byte && re_byte <= 20)
+                    else if(10 < re_byte && re_byte <= 20) //frequency -
                     {
-                        Freq_SetBuff[8] = re_byte;
+                        rf_offset = re_byte;
+                        eeprom_write_byte(Addr_rf_offset,rf_offset);
                         re_byte = re_byte - 10;
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426075000 - 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Freq_SetBuff);
-                        ML7345_Frequency_Set(Freq_SetBuff,1);
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 - 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
+                        ML7345_Frequency_Set(Fre_429_175,1);
                     }
-                    ML7345_SetAndGet_State(TRX_OFF);
                     Tx_Data_Test(1);
                     d0 = '(';
                     d1 = 'O';
@@ -283,8 +289,10 @@ void PC_PRG(void) // 串口命令
                     Send_char(d3);
                 }
                 break;
+            default:
+                break;
         }
-	}
+    }
 }
 void ReceiveFrame(UINT8 Cache)
 {

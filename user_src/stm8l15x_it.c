@@ -186,7 +186,6 @@ INTERRUPT_HANDLER(EXTI2_IRQHandler, 10)
   /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-  //ID_Decode_function();
 }
 
 /**
@@ -212,7 +211,6 @@ INTERRUPT_HANDLER(EXTI4_IRQHandler, 12)
   /* In order to detect unexpected events during development,
        it is recommended to set a breakpoint on the following instruction.
     */
-    //DataReceive();
 }
 
 /**

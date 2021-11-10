@@ -250,7 +250,7 @@ extern Mark_Un mark0_stu;
 
 extern Mark_Un mark1_stu;
 #define Flag_test_mode   mark1_stu.un_var_bit0
-#define Flag_rx_rssi     mark1_stu.un_var_bit1
+#define Flag_test_fm     mark1_stu.un_var_bit1
 
 
 #endif
