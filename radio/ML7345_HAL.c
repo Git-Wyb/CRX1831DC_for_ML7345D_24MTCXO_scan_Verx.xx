@@ -263,7 +263,7 @@ void ML7345_Frequency_Set(u8 *freq,u8 radio_type)
 {
     Flag_set_freq = 1;
     if(ML7345_SetAndGet_State(Get_Sta) != TRX_OFF)
-        ML7345_SetAndGet_State(TRX_OFF);
+        ML7345_SetAndGet_State(Force_TRX_OFF);
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK1_SEL); /* Bank1 Set */
     ML7345_Write_Reg(ADDR_TXFREQ_I,freq[0]);
     ML7345_Write_Reg(ADDR_TXFREQ_FH,freq[1]);

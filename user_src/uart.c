@@ -88,9 +88,9 @@ void UART1_end(void)
 void UART1_RX_RXNE(void)
 { // RXD中断服务程序
 	unsigned char dat;
-	dat = USART1_DR; // 接收数据
-					 //Send_char(dat);
-	if(Flag_test_mode == 0) ReceiveFrame(dat);
+    if(USART1_SR_bit.RXNE == 1) dat = USART1_DR; // 接收数据
+
+    if(Flag_test_mode == 0) ReceiveFrame(dat);
     else
     {
         if(dat == '(') SIO_cnt = 0;
@@ -99,7 +99,7 @@ void UART1_RX_RXNE(void)
         if (dat == ')')
         {
             for (dat = 0; dat < SIO_cnt; dat++)
-	       	{
+            {
                 SIO_DATA[dat] = SIO_buff[dat];
             }
             BIT_SIO = 1; // 标志
