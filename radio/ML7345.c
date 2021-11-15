@@ -200,8 +200,8 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x24,0x03);
     ML7345_Write_Reg(0x7e,0x00);
 
-    if(freq == Fre_426_075) ML7345_DataRate_Set_1_2k();
-    else    ML7345_DataRate_Set_4_8k();
+    if((PROFILE_CH_FREQ_32bit_200002EC == 429350000) || (PROFILE_CH_FREQ_32bit_200002EC == 429550000)) ML7345_DataRate_Set_4_8k();
+    else    ML7345_DataRate_Set_1_2k();
     /*****************************************************/
 
     ML7345_Write_Reg(0x00, 0x11);     /* BANK_SEL(BANK0) */
@@ -327,11 +327,14 @@ void RF_Ber_Test(void)
 {
     if (X_COUNT >= 1000)
     {
-        if (X_ERR >= 50) RX_LED = 0;
-        else            RX_LED = 1;
+        if (X_ERR >= 50) Receiver_LED_RX = 0;
+        else             Receiver_LED_RX = 1;
         X_ERR = 0;
         X_COUNT = 0;
+        X_ERRTimer = 1250;
     }
+    if (X_ERRTimer == 0)
+        Receiver_LED_RX = 0;
 }
 
 void APP_TX_PACKET(void)
@@ -473,6 +476,8 @@ void ML7345D_RF_test_mode(void)
     Flag_test_mode = 0;
     while (Receiver_test == 0)
     {
+        if(Flag_test_mode == 0) UART1_INIT_TestMode();
+
         Flag_test_mode = 1;
         Receiver_LED_OUT = 0;
         ClearWDT();   // Service the WDT
@@ -496,6 +501,8 @@ void ML7345D_RF_test_mode(void)
             FG_test_rx = 0;
             Receiver_LED_RX = 0;
             FG_test_tx_off = 0;
+            Flag_test_rssi = 0;
+            PROFILE_CH_FREQ_32bit_200002EC = 429175000;
             if (Tx_Rx_mode == 0) //发载波，无调制信叿
             {
                 Receiver_LED_TX = 1;
@@ -540,6 +547,7 @@ void ML7345D_RF_test_mode(void)
             {
                 FG_test_tx_off = 1;
                 ML7345_SetAndGet_State(Force_TRX_OFF);
+                PROFILE_CH_FREQ_32bit_200002EC = 426750000;
                 ML7345_Frequency_Set(Fre_426_750,1);
                 ML7345_MeasurBER_Init();
                 ML7345_SetAndGet_State(RX_ON);
@@ -553,7 +561,7 @@ void ML7345D_RF_test_mode(void)
                 }
                 //SCAN_RECEIVE_PACKET(); //扫描接收数据
             }
-            if (Tx_Rx_mode == 3) //packet usart out put BER
+            if (Tx_Rx_mode == 3 && Flag_test_rssi == 0) //packet usart out put BER
             {
                 RF_Ber_Test();
             }
@@ -562,7 +570,8 @@ void ML7345D_RF_test_mode(void)
     }
     if(Flag_test_mode == 1)
     {
-        ML7345_SetAndGet_State(TRX_OFF);
+        UART1_INIT();
+        ML7345_SetAndGet_State(Force_TRX_OFF);
         RF_ML7345_Init(Fre_426_075,0x55,12);
     }
     PROFILE_CH_FREQ_32bit_200002EC = 426075000;

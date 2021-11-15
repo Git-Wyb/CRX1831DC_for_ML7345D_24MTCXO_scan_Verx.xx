@@ -63,9 +63,9 @@ void main(void)
     beep_init();       // 蜂鸣�?
     ClearWDT();        // Service the WDT */
     SPI_Config_Init();
+    PROFILE_CH_FREQ_32bit_200002EC = 426075000;
     RF_ML7345_Init(Fre_426_075,0x55,12);
     UART1_INIT();      // UART1 for PC Software
-    PROFILE_CH_FREQ_32bit_200002EC = 426075000;
     TIME_power_led=500;
     ClearWDT();        // Service the WDT
     _EI();

@@ -54,21 +54,37 @@ void UART1_INIT(void)
 	USART1_CR2_bit.TEN = 1;
 	USART1_CR2_bit.REN = 1;
 
-	//	USART1_CR3 = 0; // 1个停止位
-	//	USART1_CR4 = 0;
-	//	USART1_CR5 = 0x00;  //0x08;						// 半双工模�?
 	/*设置波特�? */
 	baud_div = 16000000 / 9600; /*求出分频因子*/
 	USART1_BRR2 = baud_div & 0x0f;
 	USART1_BRR2 |= ((baud_div & 0xf000) >> 8);
 	USART1_BRR1 = ((baud_div & 0x0ff0) >> 4); /*先给BRR2赋�??�?后再设置BRR1*/
 
-	//	USART1_BRR2 = 0x03; // 设置波特�?600
-	//	USART1_BRR1 = 0x68; // 3.6864M/9600 = 0x180
-	//16.00M/9600 = 0x683
-	//USART1_CR2 = 0x08;	// 允许发�??
-	//USART1_CR2 = 0x24;
-	//Send_char(0xa5);
+	u1InitCompleteFlag = 1;
+}
+
+void UART1_INIT_TestMode(void)
+{
+	unsigned int baud_div = 0;
+	u1InitCompleteFlag = 0;
+
+	SYSCFG_RMPCR1_USART1TR_REMAP = 0;
+	USART1_CR1_bit.M = 0;
+	USART1_CR1_bit.PCEN = 0;
+	USART1_CR1_bit.PS = 0;
+	USART1_CR2_bit.TIEN = 0;
+	USART1_CR2_bit.TCIEN = 0;
+	USART1_CR2_bit.RIEN = 1;
+	USART1_CR2_bit.ILIEN = 0;
+	USART1_CR2_bit.TEN = 1;
+	USART1_CR2_bit.REN = 1;
+
+	/*设置波特玿 */
+	baud_div = 16000000 / 9600; /*求出分频因子*/
+	USART1_BRR2 = baud_div & 0x0f;
+	USART1_BRR2 |= ((baud_div & 0xf000) >> 8);
+	USART1_BRR1 = ((baud_div & 0x0ff0) >> 4); /*先给BRR2赋忿朿后再设置BRR1*/
+
 	u1InitCompleteFlag = 1;
 }
 void UART1_end(void)
@@ -195,8 +211,11 @@ void PC_PRG(void) // 串口命令
         switch(SIO_DATA[1])
         {
             case 'S':
-                ML7345_SetAndGet_State(Force_TRX_OFF);
+                Flag_test_rssi = 0;
                 Flag_test_fm = 0;
+                Receiver_LED_RX = 0;
+                Receiver_LED_TX = 1;
+                ML7345_SetAndGet_State(Force_TRX_OFF);
                 CG2214M6_USE_T;
                 ML7345_Frequency_Set(Fre_429_175,1);
                 Tx_Data_Test(0);    //发载波
@@ -212,8 +231,11 @@ void PC_PRG(void) // 串口命令
             case 'E':
                 if(SIO_DATA[2] == 'N' && SIO_DATA[3] == 'D')
                 {
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    Flag_test_rssi = 0;
                     Flag_test_fm = 0;
+                    Receiver_LED_RX = 0;
+                    Receiver_LED_TX = 0;
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
                     d0 = '(';
                     d1 = 'O';
                     d2 = 'K';
@@ -227,9 +249,11 @@ void PC_PRG(void) // 串口命令
             case 'F':
                 if(SIO_DATA[2]=='M')  //载波+调制
                 {
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    Flag_test_rssi = 0;
                     Flag_test_fm = 1;
+                    Receiver_LED_RX = 0;
                     CG2214M6_USE_T;
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
                     ML7345_Frequency_Set(Fre_429_175,1);
                     Tx_Data_Test(1);
                     d0 = '(';
@@ -258,6 +282,8 @@ void PC_PRG(void) // 串口命令
                 }
                 else if (SIO_DATA[2]=='C' && Flag_test_fm == 1)
                 {
+                    Flag_test_rssi = 0;
+                    Receiver_LED_RX = 0;
                     re_byte = asc_hex_2(SIO_buff[3],SIO_buff[4]);
                     ML7345_SetAndGet_State(Force_TRX_OFF);
                     CG2214M6_USE_T;
@@ -268,6 +294,8 @@ void PC_PRG(void) // 串口命令
                         PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 + 150 * re_byte;
                         ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
                         ML7345_Frequency_Set(Fre_429_175,1);
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 + 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
                     }
                     else if(10 < re_byte && re_byte <= 20) //frequency -
                     {
@@ -277,6 +305,8 @@ void PC_PRG(void) // 串口命令
                         PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 - 150 * re_byte;
                         ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
                         ML7345_Frequency_Set(Fre_429_175,1);
+                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 - 150 * re_byte;
+                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
                     }
                     Tx_Data_Test(1);
                     d0 = '(';
@@ -289,8 +319,55 @@ void PC_PRG(void) // 串口命令
                     Send_char(d3);
                 }
                 break;
+
+            case 'R':
+                if(SIO_DATA[2]=='S')
+                {
+                    Flag_test_fm = 0;
+                    Receiver_LED_TX = 0;
+                    CG2214M6_USE_R;
+                    ML7345_SetAndGet_State(Force_TRX_OFF);
+                    PROFILE_CH_FREQ_32bit_200002EC = 426750000;
+                    ML7345_Frequency_Set(Fre_426_750,1);
+                    ML7345_MeasurBER_Init();
+                    ML7345_SetAndGet_State(RX_ON);
+                    Flag_test_rssi = 1;
+                    d0 = '(';
+                    d1 = 'O';
+                    d2 = 'K';
+                    d3 = ')';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                }
+                else if(SIO_DATA[2]=='N')
+                {
+                    d0 = '(';
+                    d1 = 'R';
+                    d2 = 'N';
+                    Send_char(d0);
+                    Send_char(d1);
+                    Send_char(d2);
+                    d1 = hex_asc((ID_DATA_PCS & 0xff) / 16);
+                    d2 = hex_asc((ID_DATA_PCS & 0xff) % 16);
+                    d3 = ')';
+                    Send_char(d1);
+                    Send_char(d2);
+                    Send_char(d3);
+                }
+                break;
             default:
                 break;
+        }
+    }
+    if(Flag_test_rssi == 1) RF_Ber_Test();
+    if(Flag_test_fm == 1)
+    {
+        if (TIMER1s == 0)
+        {
+            TIMER1s = 500;
+            Receiver_LED_TX = !Receiver_LED_TX;
         }
     }
 }
