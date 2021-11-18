@@ -197,179 +197,251 @@ unsigned char asc_hex_2(unsigned char asc1, unsigned char asc0)
 	return i;
 }
 
+void uart_send_dat(unsigned char *pbuf,unsigned char len)
+{
+    unsigned char i = 0;
+    for(i=0; i<len; i++)
+    {
+        Send_char(pbuf[i]);
+    }
+}
+
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 u32 PROFILE_CH_FREQ_32bit_200002EC_uart = 0;
 void PC_PRG(void) // 串口命令
 {
-	unsigned char d3, d2, d1, d0;
+	unsigned char send_dat[12] = {0};
+    unsigned char send_ok[4] = {'(','O','K',')'};
+    uni_rom_id UART_ID_data;
     unsigned char re_byte = 0;
 
     if (BIT_SIO)
 	{
 		BIT_SIO = 0;
 		//SIO_TOT = 20;
-        switch(SIO_DATA[1])
+        if(SIO_DATA[1] == 'T' && SIO_DATA[2] == 'E' && SIO_DATA[3] == 'S' && SIO_DATA[4] == 'T' && SIO_DATA[5]==')')
         {
-            case 'S':
-                Flag_test_rssi = 0;
-                Flag_test_fm = 0;
-                Receiver_LED_RX = 0;
-                Receiver_LED_TX = 1;
-                ML7345_SetAndGet_State(Force_TRX_OFF);
-                CG2214M6_USE_T;
-                ML7345_Frequency_Set(Fre_429_175,1);
-                Tx_Data_Test(0);    //发载波
-                d0 = '(';
-                d1 = 'O';
-                d2 = 'K';
-                d3 = ')';
-                Send_char(d0);
-                Send_char(d1);
-                Send_char(d2);
-                Send_char(d3);
-                break;
-            case 'E':
-                if(SIO_DATA[2] == 'N' && SIO_DATA[3] == 'D')
-                {
-                    Flag_test_rssi = 0;
-                    Flag_test_fm = 0;
-                    Receiver_LED_RX = 0;
-                    Receiver_LED_TX = 0;
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
-                    d0 = '(';
-                    d1 = 'O';
-                    d2 = 'K';
-                    d3 = ')';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                }
-                break;
-            case 'F':
-                if(SIO_DATA[2]=='M')  //载波+调制
-                {
-                    Flag_test_rssi = 0;
-                    Flag_test_fm = 1;
-                    Receiver_LED_RX = 0;
-                    CG2214M6_USE_T;
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
-                    ML7345_Frequency_Set(Fre_429_175,1);
-                    Tx_Data_Test(1);
-                    d0 = '(';
-                    d1 = 'O';
-                    d2 = 'K';
-                    d3 = ')';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                }
-                else if(SIO_DATA[2]=='C' && SIO_DATA[3]=='?')
-                {
-                    d0 = '(';
-                    d1 = 'F';
-                    d2 = 'C';
-                    d3 = ')';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                    d0 = hex_asc(rf_offset / 16);
-                    d1 = hex_asc(rf_offset % 16);
-                    Send_char(d0);
-                    Send_char(d1);
-                }
-                else if (SIO_DATA[2]=='C' && Flag_test_fm == 1)
-                {
-                    Flag_test_rssi = 0;
-                    Receiver_LED_RX = 0;
-                    re_byte = asc_hex_2(SIO_buff[3],SIO_buff[4]);
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
-                    CG2214M6_USE_T;
-                    if(re_byte <= 10) //frequency +
+            Flag_test_pc = 1;
+            Flag_test_rssi = 0;
+            Flag_test_fm = 0;
+            Receiver_LED_OUT = 0;
+            Receiver_LED_TX = 0;
+            Receiver_LED_RX = 0;
+            Receiver_OUT_STOP = 0;
+            Receiver_OUT_CLOSE = 0;
+            Receiver_OUT_OPEN = 0;
+            X_COUNT = 0;
+            X_ERR = 0;
+            ML7345_SetAndGet_State(Force_TRX_OFF);
+            uart_send_dat(send_ok,4);
+        }
+        if(Flag_test_pc == 1)
+        {
+            switch(SIO_DATA[1])
+            {
+                case 'S':
+                    if(SIO_DATA[2] == ')')
                     {
-                        rf_offset = re_byte;
-                        eeprom_write_byte(Addr_rf_offset,rf_offset);
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 + 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
+                        Flag_test_rssi = 0;
+                        Flag_test_fm = 0;
+                        CG2214M6_USE_T;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
                         ML7345_Frequency_Set(Fre_429_175,1);
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 + 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                        Tx_Data_Test(0);    //发载波
+                        uart_send_dat(send_ok,4);
                     }
-                    else if(10 < re_byte && re_byte <= 20) //frequency -
+                    break;
+                case 'E':
+                    if(SIO_DATA[2]=='N' && SIO_DATA[3]=='D' && SIO_DATA[4]==')')
                     {
-                        rf_offset = re_byte;
-                        eeprom_write_byte(Addr_rf_offset,rf_offset);
-                        re_byte = re_byte - 10;
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 - 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
-                        ML7345_Frequency_Set(Fre_429_175,1);
-                        PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 - 150 * re_byte;
-                        ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                        Flag_test_pc = 0;
+                        Flag_test_rssi = 0;
+                        Flag_test_fm = 0;
+                        Receiver_LED_OUT = 0;
+                        Receiver_LED_TX = 0;
+                        Receiver_LED_RX = 0;
+                        Receiver_OUT_STOP = 0;
+                        Receiver_OUT_CLOSE = 0;
+                        Receiver_OUT_OPEN = 0;
+                        X_COUNT = 0;
+                        X_ERR = 0;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        uart_send_dat(send_ok,4);
                     }
-                    Tx_Data_Test(1);
-                    d0 = '(';
-                    d1 = 'O';
-                    d2 = 'K';
-                    d3 = ')';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                }
-                break;
+                    else if(SIO_DATA[2]=='H' && SIO_DATA[3]==')')
+                    {
+                        ID_DATA_PCS = 0;
+                        ALL_ID_EEPROM_Erase();
+                        ID_SCX1801_DATA = 0;
+                        ID_SCX1801_EEPROM_write(0x00);
+                        uart_send_dat(send_ok,4);
+                    }
+                    break;
+                case 'F':
+                    if(SIO_DATA[2]=='M' && SIO_DATA[3]==')')  //载波+调制
+                    {
+                        Flag_test_rssi = 0;
+                        Flag_test_fm = 1;
+                        CG2214M6_USE_T;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        ML7345_Frequency_Set(Fre_429_175,1);
+                        Tx_Data_Test(1);
+                        uart_send_dat(send_ok,4);
+                    }
+                    else if(SIO_DATA[2]=='C' && SIO_DATA[3]=='?' && SIO_DATA[4]==')')
+                    {
+                        send_dat[0] = '(';
+                        send_dat[1] = 'F';
+                        send_dat[2] = 'C';
+                        send_dat[3] = hex_asc(rf_offset / 16);
+                        send_dat[4] = hex_asc(rf_offset % 16);
+                        send_dat[5] = ')';
+                        uart_send_dat(send_dat,6);
+                    }
+                    else if (SIO_DATA[2]=='C' && SIO_DATA[5]==')' && Flag_test_fm == 1)
+                    {
+                        Flag_test_rssi = 0;
+                        re_byte = asc_hex_2(SIO_buff[3],SIO_buff[4]);
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        CG2214M6_USE_T;
+                        if(re_byte <= 10) //frequency +
+                        {
+                            rf_offset = re_byte;
+                            eeprom_write_byte(Addr_rf_offset,rf_offset);
+                            PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 + 150 * re_byte;
+                            ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
+                            ML7345_Frequency_Set(Fre_429_175,1);
+                            PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 + 150 * re_byte;
+                            ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                        }
+                        else if(10 < re_byte && re_byte <= 20) //frequency -
+                        {
+                            rf_offset = re_byte;
+                            eeprom_write_byte(Addr_rf_offset,rf_offset);
+                            re_byte = re_byte - 10;
+                            PROFILE_CH_FREQ_32bit_200002EC_uart = 429175000 - 150 * re_byte;
+                            ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_429_175);
+                            ML7345_Frequency_Set(Fre_429_175,1);
+                            PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 - 150 * re_byte;
+                            ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                        }
+                        Tx_Data_Test(1);
+                        uart_send_dat(send_ok,4);
+                    }
+                    break;
 
-            case 'R':
-                if(SIO_DATA[2]=='S')
-                {
-                    Flag_test_fm = 0;
-                    Receiver_LED_TX = 0;
-                    CG2214M6_USE_R;
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
-                    PROFILE_CH_FREQ_32bit_200002EC = 426750000;
-                    ML7345_Frequency_Set(Fre_426_750,1);
-                    ML7345_MeasurBER_Init();
-                    ML7345_SetAndGet_State(RX_ON);
-                    Flag_test_rssi = 1;
-                    d0 = '(';
-                    d1 = 'O';
-                    d2 = 'K';
-                    d3 = ')';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                }
-                else if(SIO_DATA[2]=='N')
-                {
-                    d0 = '(';
-                    d1 = 'R';
-                    d2 = 'N';
-                    Send_char(d0);
-                    Send_char(d1);
-                    Send_char(d2);
-                    d1 = hex_asc((ID_DATA_PCS & 0xff) / 16);
-                    d2 = hex_asc((ID_DATA_PCS & 0xff) % 16);
-                    d3 = ')';
-                    Send_char(d1);
-                    Send_char(d2);
-                    Send_char(d3);
-                }
-                break;
-            default:
-                break;
+                case 'R':
+                    if(SIO_DATA[2]=='S' && SIO_DATA[3]=='S' && SIO_DATA[4]=='I' && SIO_DATA[5]==')' && Flag_test_rssi==1)
+                    {
+                        send_dat[0] = '(';
+                        send_dat[1] = 'R';
+                        send_dat[2] = 'S';
+                        send_dat[3] = 'S';
+                        send_dat[4] = 'I';
+                        send_dat[5] = hex_asc((X_ERR_CNT & 0xff) / 16);
+                        send_dat[6] = hex_asc((X_ERR_CNT & 0xff)% 16);
+                        send_dat[7] = ')';
+                        uart_send_dat(send_dat,8);
+                    }
+                    else if(SIO_DATA[2]=='S' && SIO_DATA[3]==')')
+                    {
+                        Flag_test_fm = 0;
+                        Receiver_LED_TX = 0;
+                        CG2214M6_USE_R;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        PROFILE_CH_FREQ_32bit_200002EC = 426750000;
+                        ML7345_Frequency_Set(Fre_426_750,1);
+                        ML7345_MeasurBER_Init();
+                        ML7345_SetAndGet_State(RX_ON);
+                        Flag_test_rssi = 1;
+                        uart_send_dat(send_ok,4);
+                    }
+                    else if(SIO_DATA[2]=='N' && SIO_DATA[3]==')')
+                    {
+                        send_dat[0] = '(';
+                        send_dat[1] = 'R';
+                        send_dat[2] = 'N';
+                        send_dat[3] = hex_asc((ID_DATA_PCS & 0xff) / 16);
+                        send_dat[4] = hex_asc((ID_DATA_PCS & 0xff) % 16);
+                        send_dat[5] = ')';
+                        uart_send_dat(send_dat,6);
+                    }
+                    else if(SIO_DATA[2]=='G' && SIO_DATA[5]==')')
+                    {
+                        if(SIO_DATA[3]=='0' && SIO_DATA[4]=='0')
+                        {
+                            UART_ID_data.IDB[1] = ReadByteEEPROM(addr_eeprom_sys + 0x3FB);
+                            UART_ID_data.IDB[2] = ReadByteEEPROM(addr_eeprom_sys + 0x3FC);
+                            UART_ID_data.IDB[3] = ReadByteEEPROM(addr_eeprom_sys + 0x3FD);
+                            send_dat[0] = '(';
+                            send_dat[1] = 'R';
+                            send_dat[2] = 'G';
+                            send_dat[3] = ')';
+                            send_dat[4] = hex_asc(UART_ID_data.IDB[1] / 16);
+                            send_dat[5] = hex_asc(UART_ID_data.IDB[1] % 16);
+                            send_dat[6] = hex_asc(UART_ID_data.IDB[2] / 16);
+                            send_dat[7] = hex_asc(UART_ID_data.IDB[2] % 16);
+                            send_dat[8] = hex_asc(UART_ID_data.IDB[3] / 16);
+                            send_dat[9] = hex_asc(UART_ID_data.IDB[3] % 16);
+                            uart_send_dat(send_dat,10);
+                        }
+                    }
+                    break;
+                case 'K':
+                    if(SIO_DATA[2]=='Y' && SIO_DATA[3]==')')
+                    {
+                        send_dat[0] = '(';
+                        send_dat[1] = 'K';
+                        send_dat[2] = 'Y';
+                        send_dat[7] = 0;
+                        send_dat[7] = send_dat[7] | Receiver_Login;
+                        send_dat[3] = hex_asc((send_dat[7] & 0xff) / 16);
+                        send_dat[4] = hex_asc((send_dat[7] & 0xff) % 16);
+                        send_dat[5] = ')';
+                        uart_send_dat(send_dat,6);
+                    }
+                    break;
+                case 'P':
+                    if(SIO_DATA[2]=='H' && SIO_DATA[6]==')')
+                    {
+                        if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='1')         {Receiver_LED_OUT = 1;  uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='2')    {Receiver_LED_TX = 1;   uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='3')    {Receiver_LED_RX = 1;   uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='1')    {Receiver_OUT_STOP = 1; uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='2')    {Receiver_OUT_CLOSE = 1;uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='3')    {Receiver_OUT_OPEN = 1; uart_send_dat(send_ok,4);}
+                    }
+                    else if(SIO_DATA[2]=='L' && SIO_DATA[6]==')')
+                    {
+                        if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='1')         {Receiver_LED_OUT = 0;  uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='2')    {Receiver_LED_TX = 0;   uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='B' && SIO_DATA[4]=='0' && SIO_DATA[5]=='3')    {Receiver_LED_RX = 0;   uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='1')    {Receiver_OUT_STOP = 0; uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='2')    {Receiver_OUT_CLOSE = 0;uart_send_dat(send_ok,4);}
+                        else if(SIO_DATA[3]=='D' && SIO_DATA[4]=='0' && SIO_DATA[5]=='3')    {Receiver_OUT_OPEN = 0; uart_send_dat(send_ok,4);}
+                    }
+                    break;
+                case 'W':
+                    if(SIO_DATA[2]=='G' && SIO_DATA[9]==')')
+                    {
+                        UART_ID_data.IDB[0]=0;
+                        UART_ID_data.IDB[1]  = asc_hex_2(SIO_buff[3],SIO_buff[4]);
+                        UART_ID_data.IDB[2]  = asc_hex_2(SIO_buff[5],SIO_buff[6]);
+                        UART_ID_data.IDB[3]  = asc_hex_2(SIO_buff[7],SIO_buff[8]);
+                        eeprom_write_byte(0x3FB,UART_ID_data.IDB[1]);
+                        eeprom_write_byte(0x3FC,UART_ID_data.IDB[2]);
+                        eeprom_write_byte(0x3FD,UART_ID_data.IDB[3]);
+                        ID_SCX1801_DATA = UART_ID_data.IDL;
+                        ID_DATA_PCS++;
+                        uart_send_dat(send_ok,4);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
-    if(Flag_test_rssi == 1) RF_Ber_Test();
-    if(Flag_test_fm == 1)
-    {
-        if (TIMER1s == 0)
-        {
-            TIMER1s = 500;
-            Receiver_LED_TX = !Receiver_LED_TX;
-        }
-    }
+    if(Flag_test_rssi == 1) Uart_RF_Ber_Test();
 }
 void ReceiveFrame(UINT8 Cache)
 {

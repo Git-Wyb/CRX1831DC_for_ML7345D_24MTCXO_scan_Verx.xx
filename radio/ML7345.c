@@ -183,6 +183,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x5f,0x67);    /* 0x67 Demodulator configulation 9 */
     ML7345_Write_Reg(0x60,0x0c);    /* Demodulator configulation 10 */
 
+    SetReg_Rssi();  //2021.11.17 ROHM提出必要设置,否则读取RSSI偏差大。
 
     ML7345_Write_Reg(0x00,0x44); //bank2
     ML7345_Write_Reg(0x2a,0x0f); //2019.11.25 ROHM提出设置,设置之后灵敏度提升了2dBm
@@ -337,6 +338,17 @@ void RF_Ber_Test(void)
         Receiver_LED_RX = 0;
 }
 
+void Uart_RF_Ber_Test(void)
+{
+    if (X_COUNT >= 1000)
+    {
+        if(X_ERR > 255)  X_ERR_CNT = 255;
+        else X_ERR_CNT = X_ERR;
+        X_ERR = 0;
+        X_COUNT = 0;
+    }
+}
+
 void APP_TX_PACKET(void)
 {
     char rssi;
@@ -393,9 +405,8 @@ void APP_TX_PACKET(void)
 					  FLAG_Key_TP3=0;
 					  Last_Uart_Struct_DATA_Packet_Contro=Uart_Struct_DATA_Packet_Contro;
 					  Last_Uart_Struct_DATA_Packet_Contro.Fno_Type.UN.type=1;
-					  rssi=RAM_RSSI_AVG;///128;
-					  rssi=-rssi;
-					  if(rssi>=127)rssi=127;
+					  rssi=(RAM_RSSI_AVG - 255)/3 - 51;
+                      rssi = -rssi;
 					  if(Radio_Date_Type_bak==2)rssi= rssi | 0x80;
 					  Last_Uart_Struct_DATA_Packet_Contro.data[1].uc[0]= rssi;
 					  if(FLAG_APP_TX_fromOUT==1) Last_Uart_Struct_DATA_Packet_Contro.Fno_Type.UN.fno= Struct_DATA_Packet_Contro_fno;
@@ -474,96 +485,102 @@ void ML7345D_RF_test_mode(void)
 {
     Receiver_LED_OUT = 1;
     Flag_test_mode = 0;
+    Flag_test_pc = 0;
     while (Receiver_test == 0)
     {
-        if(Flag_test_mode == 0) UART1_INIT_TestMode();
-
+        if(Flag_test_mode == 0)
+        {
+            UART1_INIT_TestMode();
+            Receiver_LED_OUT = 0;
+        }
         Flag_test_mode = 1;
-        Receiver_LED_OUT = 0;
         ClearWDT();   // Service the WDT
-        if (TP4 == 0) //test  TX
+        if(Flag_test_pc == 0)
         {
-            if (TP3 == 0)
-                Tx_Rx_mode = 0;
-            else
-                Tx_Rx_mode = 1;
-        }
-        else //test  RX
-        {
-            if (TP3 == 0)
-                Tx_Rx_mode = 2;
-            else
-                Tx_Rx_mode = 3;
-        }
-        if ((Tx_Rx_mode == 0) || (Tx_Rx_mode == 1))
-        {
-            CG2214M6_USE_T;
-            FG_test_rx = 0;
-            Receiver_LED_RX = 0;
-            FG_test_tx_off = 0;
-            Flag_test_rssi = 0;
-            PROFILE_CH_FREQ_32bit_200002EC = 429175000;
-            if (Tx_Rx_mode == 0) //发载波，无调制信叿
+            if (TP4 == 0) //test  TX
             {
-                Receiver_LED_TX = 1;
+                if (TP3 == 0)
+                    Tx_Rx_mode = 0;
+                else
+                    Tx_Rx_mode = 1;
+            }
+            else //test  RX
+            {
+                if (TP3 == 0)
+                    Tx_Rx_mode = 2;
+                else
+                    Tx_Rx_mode = 3;
+            }
+            if ((Tx_Rx_mode == 0) || (Tx_Rx_mode == 1))
+            {
+                CG2214M6_USE_T;
+                FG_test_rx = 0;
+                Receiver_LED_RX = 0;
+                FG_test_tx_off = 0;
+                Flag_test_rssi = 0;
+                PROFILE_CH_FREQ_32bit_200002EC = 429175000;
+                if (Tx_Rx_mode == 0) //发载波，无调制信叿
+                {
+                    Receiver_LED_TX = 1;
+                    FG_test_mode = 0;
+                    FG_test_tx_1010 = 0;
+                    if (FG_test_tx_on == 0)
+                    {
+                        FG_test_tx_on = 1;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        ML7345_Frequency_Set(Fre_429_175,1);
+                        Tx_Data_Test(0);
+                    }
+                }
+                else //发载波，有调制信叿
+                {
+                    if (TIMER1s == 0)
+                    {
+                        TIMER1s = 500;
+                        Receiver_LED_TX = !Receiver_LED_TX;
+                    }
+                    FG_test_mode = 1;
+                    FG_test_tx_on = 0;
+                    if (FG_test_tx_1010 == 0)
+                    {
+                        FG_test_tx_1010 = 1;
+                        ML7345_SetAndGet_State(Force_TRX_OFF);
+                        ML7345_Frequency_Set(Fre_429_175,1);
+                        Tx_Data_Test(1);
+                    }
+                }
+            }
+            //else  {           //test  RX
+            if ((Tx_Rx_mode == 2) || (Tx_Rx_mode == 3))
+            {
+                CG2214M6_USE_R;
+                FG_test_rx = 1;
+                Receiver_LED_TX = 0;
                 FG_test_mode = 0;
-                FG_test_tx_1010 = 0;
-                if (FG_test_tx_on == 0)
-                {
-                    FG_test_tx_on = 1;
-                    ML7345_SetAndGet_State(Force_TRX_OFF);
-                    ML7345_Frequency_Set(Fre_429_175,1);
-                    Tx_Data_Test(0);
-                }
-            }
-            else //发载波，有调制信叿
-            {
-                if (TIMER1s == 0)
-                {
-                    TIMER1s = 500;
-                    Receiver_LED_TX = !Receiver_LED_TX;
-                }
-                FG_test_mode = 1;
                 FG_test_tx_on = 0;
-                if (FG_test_tx_1010 == 0)
+                FG_test_tx_1010 = 0;
+                if (FG_test_tx_off == 0)
                 {
-                    FG_test_tx_1010 = 1;
+                    FG_test_tx_off = 1;
                     ML7345_SetAndGet_State(Force_TRX_OFF);
-                    ML7345_Frequency_Set(Fre_429_175,1);
-                    Tx_Data_Test(1);
+                    PROFILE_CH_FREQ_32bit_200002EC = 426750000;
+                    ML7345_Frequency_Set(Fre_426_750,1);
+                    ML7345_MeasurBER_Init();
+                    ML7345_SetAndGet_State(RX_ON);
                 }
-            }
-        }
-        //else  {           //test  RX
-        if ((Tx_Rx_mode == 2) || (Tx_Rx_mode == 3))
-        {
-            CG2214M6_USE_R;
-            FG_test_rx = 1;
-            Receiver_LED_TX = 0;
-            FG_test_mode = 0;
-            FG_test_tx_on = 0;
-            FG_test_tx_1010 = 0;
-            if (FG_test_tx_off == 0)
-            {
-                FG_test_tx_off = 1;
-                ML7345_SetAndGet_State(Force_TRX_OFF);
-                PROFILE_CH_FREQ_32bit_200002EC = 426750000;
-                ML7345_Frequency_Set(Fre_426_750,1);
-                ML7345_MeasurBER_Init();
-                ML7345_SetAndGet_State(RX_ON);
-            }
-            if (Tx_Rx_mode == 2) //packet usart out put RSSI
-            {
-                if (TIMER1s == 0)
+                if (Tx_Rx_mode == 2) //packet usart out put RSSI
                 {
-                    TIMER1s = 500;
-                    Receiver_LED_RX = !Receiver_LED_RX;
+                    if (TIMER1s == 0)
+                    {
+                        TIMER1s = 500;
+                        Receiver_LED_RX = !Receiver_LED_RX;
+                    }
+                    //SCAN_RECEIVE_PACKET(); //扫描接收数据
                 }
-                //SCAN_RECEIVE_PACKET(); //扫描接收数据
-            }
-            if (Tx_Rx_mode == 3 && Flag_test_rssi == 0) //packet usart out put BER
-            {
-                RF_Ber_Test();
+                if (Tx_Rx_mode == 3) //packet usart out put BER
+                {
+                    RF_Ber_Test();
+                }
             }
         }
         PC_PRG();
@@ -577,6 +594,7 @@ void ML7345D_RF_test_mode(void)
     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
     Ber_Exit_UnInit();
     Flag_test_mode = 0;
+    Flag_test_pc = 0;
     ML7345_GPIO2RxDoneInt_Enable(); /* 开启接收完成中断,ML7345D GPIO2中断输出 */
     ML7345_GPIO2TxDoneInt_Enable(); /* 开启发送完成中断,ML7345D GPIO2中断输出 */
     FG_test_rx = 0;
@@ -743,12 +761,11 @@ void SCAN_RECEIVE_PACKET(void)
         RX_ANALYSIS();
         Flag_FREQ_Scan = 0;
 
+        ML7345_SetAndGet_State(Force_TRX_OFF);
         Cache = ML7345_Read_Reg(ADDR_ED_RSLT);
         RAM_RSSI_SUM += Cache;
         RSSI_Read_Counter++;
         RAM_RSSI_AVG = RAM_RSSI_SUM / RSSI_Read_Counter;
-
-        ML7345_SetAndGet_State(Force_TRX_OFF);
         ML7345_Write_Reg(0x00,0x22);    // Bank1 Set
         ML7345_Write_Reg(0x2a,0x55);    //sync
         ML7345_Write_Reg(0x00,0x11);    // Bank0 Set

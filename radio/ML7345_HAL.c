@@ -509,7 +509,19 @@ void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf)  //将频率计算为ML7345寄�
     pbuf[7] = cal_val & 0xff;
 }
 
-void SetReg_Test(void)
+void SetReg_Rssi(void)
+{
+    ML7345_Write_Reg(0x00,0x22);  //Bank 1
+    ML7345_Write_Reg(0x07,0x5A);
+    ML7345_Write_Reg(0x0C,0x8A);
+    ML7345_Write_Reg(0x0D,0x26);
+    ML7345_Write_Reg(0x10,0x03);
+    ML7345_Write_Reg(0x15,0x83);
+    ML7345_Write_Reg(0x00,0x11);  //Bank 0
+}
+
+/*
+void SetReg_RssiTest(void)
 {
     ML7345_Write_Reg(0x00,0x22);  //Bank 1
     ML7345_Write_Reg(0x07,0x5A);
@@ -537,4 +549,4 @@ void SetReg_Test(void)
     ML7345_Write_Reg(0x38,0x00);
 
     ML7345_Write_Reg(0x00,0x11);  //Bank 0
-}
+}*/

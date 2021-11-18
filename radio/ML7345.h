@@ -24,6 +24,7 @@ void ML7345_TRX_Del(void);
 void APP_TX_PACKET(void);
 
 void RF_BER_TEST(void);
+void Uart_RF_Ber_Test(void);
 
 void ML7345d_Change_Channel(void);
 void ML7345D_Freq_Scanning(void);

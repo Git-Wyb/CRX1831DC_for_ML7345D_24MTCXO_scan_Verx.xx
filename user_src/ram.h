@@ -92,6 +92,7 @@ extern volatile uFLAG FLAG3;
 
 extern u16 X_COUNT;
 extern u16 X_ERR; //记录错误的个�?
+extern u8  X_ERR_CNT;
 extern u16 X_ERRTimer;
 
 extern u8 SIO_cnt;
@@ -252,6 +253,7 @@ extern Mark_Un mark1_stu;
 #define Flag_test_mode   mark1_stu.un_var_bit0
 #define Flag_test_fm     mark1_stu.un_var_bit1
 #define Flag_test_rssi   mark1_stu.un_var_bit2
+#define Flag_test_pc     mark1_stu.un_var_bit3
 
 
 #endif
