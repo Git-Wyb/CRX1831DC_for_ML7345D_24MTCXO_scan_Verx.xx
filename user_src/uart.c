@@ -232,6 +232,7 @@ void PC_PRG(void) // 串口命令
             Receiver_OUT_OPEN = 0;
             X_COUNT = 0;
             X_ERR = 0;
+            X_ERR_CNT = 0;
             ML7345_SetAndGet_State(Force_TRX_OFF);
             uart_send_dat(send_ok,4);
         }
@@ -265,6 +266,7 @@ void PC_PRG(void) // 串口命令
                         Receiver_OUT_OPEN = 0;
                         X_COUNT = 0;
                         X_ERR = 0;
+                        X_ERR_CNT = 0;
                         ML7345_SetAndGet_State(Force_TRX_OFF);
                         uart_send_dat(send_ok,4);
                     }
@@ -313,6 +315,7 @@ void PC_PRG(void) // 串口命令
                             ML7345_Frequency_Set(Fre_429_175,1);
                             PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 + 150 * re_byte;
                             ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                            uart_send_dat(send_ok,4);
                         }
                         else if(10 < re_byte && re_byte <= 20) //frequency -
                         {
@@ -324,9 +327,9 @@ void PC_PRG(void) // 串口命令
                             ML7345_Frequency_Set(Fre_429_175,1);
                             PROFILE_CH_FREQ_32bit_200002EC_uart = 426750000 - 150 * re_byte;
                             ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC_uart,Fre_426_750);
+                            uart_send_dat(send_ok,4);
                         }
                         Tx_Data_Test(1);
-                        uart_send_dat(send_ok,4);
                     }
                     break;
 
@@ -346,7 +349,9 @@ void PC_PRG(void) // 串口命令
                     else if(SIO_DATA[2]=='S' && SIO_DATA[3]==')')
                     {
                         Flag_test_fm = 0;
-                        Receiver_LED_TX = 0;
+                        X_COUNT = 0;
+                        X_ERR = 0;
+                        X_ERR_CNT = 0;
                         CG2214M6_USE_R;
                         ML7345_SetAndGet_State(Force_TRX_OFF);
                         PROFILE_CH_FREQ_32bit_200002EC = 426750000;
@@ -358,31 +363,37 @@ void PC_PRG(void) // 串口命令
                     }
                     else if(SIO_DATA[2]=='N' && SIO_DATA[3]==')')
                     {
+                        if(ID_SCX1801_DATA != 0) re_byte = ID_DATA_PCS + 1;
+                        else re_byte = ID_DATA_PCS;
                         send_dat[0] = '(';
                         send_dat[1] = 'R';
                         send_dat[2] = 'N';
-                        send_dat[3] = hex_asc((ID_DATA_PCS & 0xff) / 16);
-                        send_dat[4] = hex_asc((ID_DATA_PCS & 0xff) % 16);
+                        send_dat[3] = hex_asc((re_byte & 0xff) / 16);
+                        send_dat[4] = hex_asc((re_byte & 0xff) % 16);
                         send_dat[5] = ')';
+                        re_byte = 0;
                         uart_send_dat(send_dat,6);
                     }
                     else if(SIO_DATA[2]=='G' && SIO_DATA[5]==')')
                     {
                         if(SIO_DATA[3]=='0' && SIO_DATA[4]=='0')
                         {
+                            UART_ID_data.IDB[0] = 0;
                             UART_ID_data.IDB[1] = ReadByteEEPROM(addr_eeprom_sys + 0x3FB);
                             UART_ID_data.IDB[2] = ReadByteEEPROM(addr_eeprom_sys + 0x3FC);
                             UART_ID_data.IDB[3] = ReadByteEEPROM(addr_eeprom_sys + 0x3FD);
+                            if ((UART_ID_data.IDL == 0) || (UART_ID_data.IDL == 0xFFFFFF))  ID_SCX1801_DATA=0;
+                            else ID_SCX1801_DATA = UART_ID_data.IDL;
                             send_dat[0] = '(';
                             send_dat[1] = 'R';
                             send_dat[2] = 'G';
-                            send_dat[3] = ')';
-                            send_dat[4] = hex_asc(UART_ID_data.IDB[1] / 16);
-                            send_dat[5] = hex_asc(UART_ID_data.IDB[1] % 16);
-                            send_dat[6] = hex_asc(UART_ID_data.IDB[2] / 16);
-                            send_dat[7] = hex_asc(UART_ID_data.IDB[2] % 16);
-                            send_dat[8] = hex_asc(UART_ID_data.IDB[3] / 16);
-                            send_dat[9] = hex_asc(UART_ID_data.IDB[3] % 16);
+                            send_dat[3] = hex_asc(UART_ID_data.IDB[1] / 16);
+                            send_dat[4] = hex_asc(UART_ID_data.IDB[1] % 16);
+                            send_dat[5] = hex_asc(UART_ID_data.IDB[2] / 16);
+                            send_dat[6] = hex_asc(UART_ID_data.IDB[2] % 16);
+                            send_dat[7] = hex_asc(UART_ID_data.IDB[3] / 16);
+                            send_dat[8] = hex_asc(UART_ID_data.IDB[3] % 16);
+                            send_dat[9] = ')';
                             uart_send_dat(send_dat,10);
                         }
                     }
@@ -425,14 +436,13 @@ void PC_PRG(void) // 串口命令
                     if(SIO_DATA[2]=='G' && SIO_DATA[9]==')')
                     {
                         UART_ID_data.IDB[0]=0;
-                        UART_ID_data.IDB[1]  = asc_hex_2(SIO_buff[3],SIO_buff[4]);
-                        UART_ID_data.IDB[2]  = asc_hex_2(SIO_buff[5],SIO_buff[6]);
-                        UART_ID_data.IDB[3]  = asc_hex_2(SIO_buff[7],SIO_buff[8]);
+                        UART_ID_data.IDB[1] = asc_hex_2(SIO_buff[3],SIO_buff[4]);
+                        UART_ID_data.IDB[2] = asc_hex_2(SIO_buff[5],SIO_buff[6]);
+                        UART_ID_data.IDB[3] = asc_hex_2(SIO_buff[7],SIO_buff[8]);
                         eeprom_write_byte(0x3FB,UART_ID_data.IDB[1]);
                         eeprom_write_byte(0x3FC,UART_ID_data.IDB[2]);
                         eeprom_write_byte(0x3FD,UART_ID_data.IDB[3]);
                         ID_SCX1801_DATA = UART_ID_data.IDL;
-                        ID_DATA_PCS++;
                         uart_send_dat(send_ok,4);
                     }
                     break;
