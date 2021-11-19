@@ -174,6 +174,70 @@ void ML7345_DataRate_Set_1_2k(void)
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
 }
 
+void ML7345_DataRate_Set_2_4k(void)//(DataRate_ENUM rate)
+{
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
+    ML7345_Write_Reg(0x06,0x11);
+    ML7345_Write_Reg(0x07,0x15);
+    ML7345_Write_Reg(0x66,0x1E);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK1_SEL);
+    ML7345_Write_Reg(0x0C,0x93);
+    ML7345_Write_Reg(0x0D,0x35);
+    ML7345_Write_Reg(0x11,0x27);
+    ML7345_Write_Reg(0x13,0x0C);
+    ML7345_Write_Reg(0x2F,0x08);
+    ML7345_Write_Reg(0x56,0x50);
+    ML7345_Write_Reg(0x57,0x40);
+    ML7345_Write_Reg(0x58,0x01);
+    ML7345_Write_Reg(0x59,0x14);
+    ML7345_Write_Reg(0x5A,0x00);
+    ML7345_Write_Reg(0x5B,0x00);
+    ML7345_Write_Reg(0x5C,0x15);
+    ML7345_Write_Reg(0x5D,0x0D);
+    ML7345_Write_Reg(0x5E,0x05);
+    ML7345_Write_Reg(0x5F,0x67);
+    ML7345_Write_Reg(0x60,0x09);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK3_SEL);
+    ML7345_Write_Reg(0x0C,0x41);
+    ML7345_Write_Reg(0x0D,0x33);
+    ML7345_Write_Reg(0x0E,0x54);
+    ML7345_Write_Reg(0x14,0x10);
+    ML7345_Write_Reg(0x24,0x03);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
+}
+
+void ML7345_DataRate_Set_9_6k(void)//(DataRate_ENUM rate)
+{
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
+    ML7345_Write_Reg(0x06,0x33);
+    ML7345_Write_Reg(0x07,0x15);
+    ML7345_Write_Reg(0x66,0x1E);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK1_SEL);
+    ML7345_Write_Reg(0x0C,0x93);
+    ML7345_Write_Reg(0x0D,0x35);
+    ML7345_Write_Reg(0x11,0x27);
+    ML7345_Write_Reg(0x13,0x0C);
+    ML7345_Write_Reg(0x2F,0x08);
+    ML7345_Write_Reg(0x56,0x50);
+    ML7345_Write_Reg(0x57,0x04);
+    ML7345_Write_Reg(0x58,0x01);
+    ML7345_Write_Reg(0x59,0x14);
+    ML7345_Write_Reg(0x5A,0x00);
+    ML7345_Write_Reg(0x5B,0x00);
+    ML7345_Write_Reg(0x5C,0x15);
+    ML7345_Write_Reg(0x5D,0x0D);
+    ML7345_Write_Reg(0x5E,0x04);
+    ML7345_Write_Reg(0x5F,0x5D);
+    ML7345_Write_Reg(0x60,0x0C);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK3_SEL);
+    ML7345_Write_Reg(0x0C,0x41);
+    ML7345_Write_Reg(0x0D,0x33);
+    ML7345_Write_Reg(0x0E,0x54);
+    ML7345_Write_Reg(0x14,0x10);
+    ML7345_Write_Reg(0x24,0x03);
+    ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
+}
+
 
 /*
 Function: FIFO readout setting

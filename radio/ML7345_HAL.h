@@ -77,6 +77,8 @@ void ML7345_AutoTx_Data(u8 *pbuf,u8 len);
 u8 RF_SyncWord_DONE(void);
 void ML7345_DataRate_Set_4_8k(void);
 void ML7345_DataRate_Set_1_2k(void);
+void ML7345_DataRate_Set_2_4k(void);
+void ML7345_DataRate_Set_9_6k(void);
 void ML7345_Frequency_Calcul(u32 Freq,u8 *pbuf);
 void SetReg_Rssi(void);
 
