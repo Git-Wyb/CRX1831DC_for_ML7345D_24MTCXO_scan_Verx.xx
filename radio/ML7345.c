@@ -103,7 +103,7 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x41,0x8B);    /* Enable ED value calculation,bit3=0 ED value constantly updated,bit3=1 ED value acquired at SyncWord detection timing*/
 
     ML7345_Write_Reg(0x42,0x00);    //TX前导码长度高八位
-    ML7345_Write_Reg(0x43,0x50);    //TX前导码长度低八位,不等少于16个位,TX preamble length = (specified value x2) bits
+    ML7345_Write_Reg(0x43,0x34);    //TX前导码长度低八位,不等少于16个位,TX preamble length = (specified value x2) bits
     //-----------------------------------------------------------------------------------------------------
     ML7345_Write_Reg(0x45,0x08);    //接收前导码长度(bit) RX preamble setting and ED threshold check setting
     //-----------------------------------------------------------------------------------------------------
@@ -344,9 +344,16 @@ void Uart_RF_Ber_Test(void)
     {
         if(X_ERR > 255)  X_ERR_CNT = 255;
         else X_ERR_CNT = X_ERR;
+
+        if (X_ERR >= 50) Receiver_LED_RX = 0;
+        else             Receiver_LED_RX = 1;
+
         X_ERR = 0;
         X_COUNT = 0;
+        X_ERRTimer = 1250;
     }
+    if (X_ERRTimer == 0)
+        Receiver_LED_RX = 0;
 }
 
 void APP_TX_PACKET(void)
@@ -440,7 +447,6 @@ void APP_TX_PACKET(void)
                     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
                     ML7345_GPIO2TxDoneInt_Enable();
                     ML7345_AutoTx_Data(CONST_TXPACKET_DATA_20000AF0,28);
-                    Time_APP_blank_TX=10;
                     Time_Tx_Out = 100;
 					APP_TX_freq=1; //1
 				}
@@ -448,7 +454,6 @@ void APP_TX_PACKET(void)
 				{
                     Flag_TxDone = 0;
                     ML7345_AutoTx_Data(CONST_TXPACKET_DATA_20000AF0,28);
-					Time_APP_blank_TX=10;
                     Time_Tx_Out = 100;
 					APP_TX_freq++;
 				}
@@ -723,6 +728,7 @@ void ML7345_TRX_Del(void)
     if(RF_TX_DONE())
     {
         Flag_TxDone = 1;
+        Time_APP_blank_TX = 6;
         ML7345_StateFlag_Clear(TX_DONE_FLAG);
     }
     EXTI_SR1_P5F = 1;

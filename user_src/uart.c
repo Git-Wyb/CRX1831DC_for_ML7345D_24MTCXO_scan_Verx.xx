@@ -243,6 +243,7 @@ void PC_PRG(void) // 串口命令
                 case 'S':
                     if(SIO_DATA[2] == ')')
                     {
+                        if(Flag_test_rssi == 1) Receiver_LED_RX = 0;
                         Flag_test_rssi = 0;
                         Flag_test_fm = 0;
                         CG2214M6_USE_T;
@@ -282,6 +283,7 @@ void PC_PRG(void) // 串口命令
                 case 'F':
                     if(SIO_DATA[2]=='M' && SIO_DATA[3]==')')  //载波+调制
                     {
+                        if(Flag_test_rssi == 1) Receiver_LED_RX = 0;
                         Flag_test_rssi = 0;
                         Flag_test_fm = 1;
                         CG2214M6_USE_T;
@@ -348,6 +350,7 @@ void PC_PRG(void) // 串口命令
                     }
                     else if(SIO_DATA[2]=='S' && SIO_DATA[3]==')')
                     {
+                        Receiver_LED_RX = 0;
                         Flag_test_fm = 0;
                         X_COUNT = 0;
                         X_ERR = 0;
