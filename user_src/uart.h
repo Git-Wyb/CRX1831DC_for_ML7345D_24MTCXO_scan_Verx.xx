@@ -17,12 +17,13 @@ extern u8 u1busyCache;
 #define FrameEndStatus 0x02  //桢结�?
 #define FrameHead 0x02       //数据�?�?
 #define FrameSingnalID 0x11  //信号ID
+#define UartBuff_MaxLength  41
 
 extern UINT8 UartStatus;
 extern UINT8 UartLen;
 extern UINT8 UartCount;
-extern UINT8 UART_DATA_buffer[41];
-extern UINT8 UART_DATA_ID98[41];
+extern UINT8 UART_DATA_buffer[UartBuff_MaxLength];
+extern UINT8 UART_DATA_ID98[UartBuff_MaxLength];
 
 extern u8 u1InitCompleteFlag;
 

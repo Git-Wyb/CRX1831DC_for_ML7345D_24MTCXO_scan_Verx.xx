@@ -22,8 +22,8 @@ u8 u1InitCompleteFlag = 0;
 UINT8 UartStatus = FrameHeadSataus;
 UINT8 UartLen = 0;
 UINT8 UartCount = 0;
-UINT8 UART_DATA_buffer[41] = {0};
-UINT8 UART_DATA_ID98[41] = {0};
+UINT8 UART_DATA_buffer[UartBuff_MaxLength] = {0};
+UINT8 UART_DATA_ID98[UartBuff_MaxLength] = {0};
 
 __Databits_t Databits_t;
 __U1Statues U1Statues;
@@ -471,6 +471,7 @@ void ReceiveFrame(UINT8 Cache)
 			U1Statues = ReceivingStatues;
 			UartStatus++;
 			UartLen = UART_DATA_buffer[1];
+            if(UartLen > UartBuff_MaxLength)    UartStatus = FrameHeadSataus;  //overflow
 		}
 	}
 	break;

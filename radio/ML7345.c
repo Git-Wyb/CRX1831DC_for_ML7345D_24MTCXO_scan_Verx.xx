@@ -441,12 +441,14 @@ void APP_TX_PACKET(void)
                     TIMER18ms = 300;
 				    Receiver_LED_TX = 1;
 					TX_DataLoad_HighSpeed(ID_SCX1801_DATA,Last_Uart_Struct_DATA_Packet_Contro, &CONST_TXPACKET_DATA_20000AF0[0]);
+                    ClearWDT();
                     ML7345_SetAndGet_State(Force_TRX_OFF);
                     ML7345_Write_Reg(0x00,0x22);    // Bank1 Set
                     ML7345_Write_Reg(0x2a,0x15);    //sync
                     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);
                     ML7345_GPIO2TxDoneInt_Enable();
                     ML7345_AutoTx_Data(CONST_TXPACKET_DATA_20000AF0,28);
+                    ClearWDT();
                     Time_APP_blank_TX=10;
                     Time_Tx_Out = 100;
 					APP_TX_freq=1; //1
@@ -469,6 +471,7 @@ void APP_TX_PACKET(void)
 				   Receiver_LED_TX = 0;
 				   FLAG_APP_TX_once=0;
                    Flag_tx_en = 0;
+                   retx_cnt = 0;
 				}
 		   }
     }
@@ -479,11 +482,19 @@ void APP_TX_PACKET(void)
     }
     else if(Flag_tx_en == 1 && Time_Tx_Out == 0 && Flag_TxDone == 0 && FLAG_APP_RXstart == 0)
     {
+        ClearWDT();
         if(PROFILE_CH_FREQ_32bit_200002EC == 429350000) RF_ML7345_Init(Fre_429_350,0x15,28);
         else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000) RF_ML7345_Init(Fre_429_550,0x15,28);
         ML7345_GPIO2TxDoneInt_Enable();
         ML7345_AutoTx_Data(CONST_TXPACKET_DATA_20000AF0,28);
         Time_Tx_Out = 100;
+        if(retx_cnt++ >= 2)
+        {
+            retx_cnt = 0;
+            Flag_tx_en = 0;
+            FLAG_APP_RX = 1;
+            Receiver_LED_TX = 0;
+        }
     }
 }
 
@@ -673,6 +684,7 @@ void ML7345D_Freq_Scanning(void)
         ML7345d_Change_Channel();
         if(Time_rf_init == 0)
         {
+            ClearWDT();
             Time_rf_init = 1000;
             if(PROFILE_CH_FREQ_32bit_200002EC == 426075000) RF_ML7345_Init(Fre_426_075,0x55,12);
             else if(PROFILE_CH_FREQ_32bit_200002EC == 429350000) RF_ML7345_Init(Fre_429_350,0x55,28);
@@ -698,6 +710,7 @@ void ML7345_TRX_Del(void)
 {
     u8 reg = 0;
     if(Flag_tx_en == 0) reg = RF_SyncWord_DONE();
+    ClearWDT();
     if(reg & 0x20)
     {
         TIMER18ms = 550;

@@ -35,6 +35,7 @@ void ID_Decode_IDCheck(void)
         {
             Radio_Date_Type_bak=Radio_Date_Type;
             eeprom_IDcheck();
+            ClearWDT();
             if ((FLAG_ID_Erase_Login == 1) || (FLAG_ID_Login == 1) ||(FLAG_ID_SCX1801_Login==1))
             {
                 if ((FLAG_ID_Login_OK == 0) && (DATA_Packet_Contro_buf != 0x40) && (DATA_Packet_ID != 0)&&(Radio_Date_Type_bak==1)) //2015.4.1修正 在登录模式下 不允许自动�?�信登录，只允许手动送信登录
@@ -159,7 +160,7 @@ void Signal_DATA_Decode(UINT8 NUM_Type)
     UINT16 data_out;
     UINT16 data_NRZ[7];
     UINT8 i, j,i_value;
-
+    ClearWDT();
 	if((NUM_Type==0)||(NUM_Type==1))i_value=3;
 	else if(NUM_Type==2)i_value=7;
     for (i = 0; i < i_value; i++)

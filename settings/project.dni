@@ -1,6 +1,6 @@
 [DebugChecksum]
 <<<<<<< HEAD
-Checksum=2068398880
+Checksum=140904792
 =======
 Checksum=773928336
 >>>>>>> f03119bb9d9418453f7da9e2e3549a267f3e0d0b
@@ -68,12 +68,13 @@ Fmt1=uFLAG-BYTE	4	0
 Fmt0=u32_t[6]	4	0
 Fmt1=u32_t[7]	4	0
 Fmt2=u8_t[16]	4	0
-Fmt3=u8_t[40]	4	0
-Fmt4=u8_t[8]	4	0
-Fmt5=u8_t[9]	4	0
-Fmt6=unsigned char[3]	4	0
-Fmt7=unsigned char[4]	4	0
-Fmt8=unsigned char[9]	4	0
+Fmt3=u8_t[28]	4	0
+Fmt4=u8_t[40]	4	0
+Fmt5=u8_t[8]	4	0
+Fmt6=u8_t[9]	4	0
+Fmt7=unsigned char[3]	4	0
+Fmt8=unsigned char[4]	4	0
+Fmt9=unsigned char[9]	4	0
 [watch_formats]
 Fmt0={W}0:COUNT_Receiver_Login	3	0
 Fmt1={W}0:RAM_rssi_AVG	3	0
@@ -91,13 +92,17 @@ Fmt12={W}42:Radio_Date_Type	4	0
 Fmt13={W}42:Tx_Rx_mode	4	0
 Fmt14={W}42:X_ERR_CNT	3	0
 Fmt15={W}42:cache	4	0
-Fmt16={W}42:re_rssi	3	0
-Fmt17={W}42:read_reg	4	0
-Fmt18={W}42:red_rssi	3	0
+Fmt16={W}42:dat	3	0
+Fmt17={W}42:re_rssi	3	0
+Fmt18={W}42:read_reg	4	0
+Fmt19={W}42:red_rssi	3	0
 [DataSample]
 LogEnabled=0
 GraphEnabled=0
 ShowTimeLog=1
+[Breakpoints]
+Bp0=_ "STD_CODE" "{$PROJ_DIR$\user_src\eeprom.c}.147.5" 1 0 0 0 "" 0 ""
+Count=1
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
@@ -105,8 +110,6 @@ Category=_ 0
 [TermIOLog]
 LoggingEnabled=_ 0
 LogFile=_ ""
-[Breakpoints]
-Count=0
 [Aliases]
 A0=_ "" ""
 A1=_ "D:\MyCloud\Working\Windowshade\Windowshade7030\user_src\ADF7030_1.c" "F:\Source Code\bunka-s\Bunka STM8L151G6 RX_ADF7030 Source CRX1831DC\Windowshade7030\user_src\ADF7030_1.c"
