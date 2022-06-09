@@ -31,7 +31,7 @@ If Force_TRX_OFF is selected during TX or RX operation, RF is turned off immedia
 u8 ML7345_SetAndGet_State(RF_StatusSet_ENUM sta)
 {
     u8 status = 0;
-
+    ML7345_INT_GPIO2_CR2 = 0;
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL);  //set bank0
     status = ML7345_Read_Reg(ADDR_RF_STATUS) >> 4;
     if(status != sta)
@@ -53,6 +53,7 @@ u8 ML7345_SetAndGet_State(RF_StatusSet_ENUM sta)
             status = ML7345_Read_Reg(ADDR_RF_STATUS) >> 4;
         }
     }
+    ML7345_INT_GPIO2_CR2 = 1;
     return status;
 }
 
@@ -351,15 +352,15 @@ void ML7345_Frequency_Set(u8 *freq,u8 radio_type)
     else if(radio_type == 2)  ML7345_DataRate_Set_4_8k();
 
     ML7345_Write_Reg(0x6f, 0x01);     /* VCO_CAL_START(CAL start) */
-    timeout_cnt = 0;
+    time_cnt = 0;
     while(1){
-        if(timeout_cnt++ >= 8000) break;    //约6ms
+        if(time_cnt++ >= 8000) break;    //约6ms
         if(ML7345_Read_Reg(0x0Du)&0x02u){   /* Wait VCO calibration completion */
             break;
         }
         ClearWDT();
     }
-    timeout_cnt = 0;
+    time_cnt = 0;
     ML7345_Write_Reg(ADDR_BANK_SEL,BANK0_SEL); /* Bank0 Set */
     Flag_set_freq = 0;
 }

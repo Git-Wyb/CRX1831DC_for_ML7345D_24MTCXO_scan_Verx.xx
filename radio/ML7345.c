@@ -710,7 +710,7 @@ void ML7345_TRX_Del(void)
 {
     u8 reg = 0;
     if(Flag_tx_en == 0) reg = RF_SyncWord_DONE();
-    ClearWDT();
+
     if(reg & 0x20)
     {
         TIMER18ms = 550;

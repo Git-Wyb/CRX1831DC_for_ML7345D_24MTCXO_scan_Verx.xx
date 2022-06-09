@@ -221,7 +221,7 @@ extern u8 Flag_ERROR_Read_once_again;
 extern u16 Time_rf_init;
 extern u16 timeout_cnt;
 extern u8 retx_cnt;
-
+extern u16 time_cnt;
 //-----------------------------------------------------------------------------------------------
 typedef union{
     u8 un_var;
