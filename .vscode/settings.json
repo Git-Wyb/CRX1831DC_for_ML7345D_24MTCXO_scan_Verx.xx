@@ -16,6 +16,11 @@
         "adf7030_1.h": "c",
         "pin_define.h": "c",
         "eeprom.h": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "ml7345.h": "c",
+        "spi.h": "c",
+        "type_def.h": "c",
+        "ml7345_defs.h": "c",
+        "ml7345_hal.h": "c"
     },
 }
