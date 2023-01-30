@@ -242,7 +242,7 @@
       <outputs>
         <tool>
           <name>ILINK</name>
-          <file> 26 181</file>
+          <file> 181 26</file>
         </tool>
       </outputs>
     </file>
@@ -427,7 +427,7 @@
       <inputs>
         <tool>
           <name>BICOMP</name>
-          <file> 21 193 50 91 183 113 64 165 12 158 197 131 17 68 194</file>
+          <file> 91 183 21 50 193 113 64 165 12 158 197 131 17 68 194</file>
         </tool>
         <tool>
           <name>ICCSTM8</name>

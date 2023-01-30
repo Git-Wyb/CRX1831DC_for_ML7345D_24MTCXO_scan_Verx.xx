@@ -716,25 +716,25 @@ void ML7345_TRX_Del(void)
 
     if(reg & 0x20)
     {
-        TIMER18ms = 550;
-        Flag_FREQ_Scan = 1;
-        if(Flag_rx_pream == 0 && Flag_set_freq == 0)
+        //TIMER18ms = 550;
+        //Flag_FREQ_Scan = 1;
+        //if(Flag_rx_pream == 0 && Flag_set_freq == 0)
         {
             FG_Receiver_LED_RX = 1;
-            ML7345_SetAndGet_State(Force_TRX_OFF);
-            if(PROFILE_CH_FREQ_32bit_200002EC == 426075000)
+            //ML7345_SetAndGet_State(Force_TRX_OFF);
+            //if(PROFILE_CH_FREQ_32bit_200002EC == 426075000)
             {
                 TIMER300ms = 600;
-                if(Flag_TX_ID_load == 0)    RF_ML7345_Init(Fre_426_075,0x15,12);
-                else                        RF_ML7345_Init(Fre_426_075,0x15,24);
+                //if(Flag_TX_ID_load == 0)    RF_ML7345_Init(Fre_426_075,0x15,12);
+                //else                        RF_ML7345_Init(Fre_426_075,0x15,24);
             }
-            else if(PROFILE_CH_FREQ_32bit_200002EC == 429350000)   {RF_ML7345_Init(Fre_429_350,0x15,28); TIMER300ms = 100;}
-            else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000)   {RF_ML7345_Init(Fre_429_550,0x15,28); TIMER300ms = 100;}
-            ML7345_GPIO2RxDoneInt_Enable();
-            ML7345_SetAndGet_State(RX_ON);
+           // else if(PROFILE_CH_FREQ_32bit_200002EC == 429350000)   {RF_ML7345_Init(Fre_429_350,0x15,28); TIMER300ms = 100;}
+           // else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000)   {RF_ML7345_Init(Fre_429_550,0x15,28); TIMER300ms = 100;}
+            //ML7345_GPIO2RxDoneInt_Enable();
+            //ML7345_SetAndGet_State(RX_ON);
             CG2214M6_USE_R;
         }
-        Flag_rx_pream = 1;
+        //Flag_rx_pream = 1;
         ML7345_Write_Reg(ADDR_INT_SOURCE_GRP2,0x00); //清接收完成标志
     }
     if(reg & 0x01)
@@ -790,9 +790,12 @@ void SCAN_RECEIVE_PACKET(void)
         RAM_RSSI_SUM += Cache;
         RSSI_Read_Counter++;
         RAM_RSSI_AVG = RAM_RSSI_SUM / RSSI_Read_Counter;
-        ML7345_Write_Reg(0x00,0x22);    // Bank1 Set
-        ML7345_Write_Reg(0x2a,0x55);    //sync
-        ML7345_Write_Reg(0x00,0x11);    // Bank0 Set
+        if(Flag_TX_ID_load == 0)    RF_ML7345_Init(Fre_426_075,0x15,12);
+        else                        RF_ML7345_Init(Fre_426_075,0x15,24);
+        ML7345_GPIO2RxDoneInt_Enable();
+        //ML7345_Write_Reg(0x00,0x22);    // Bank1 Set
+        //ML7345_Write_Reg(0x2a,0x55);    //sync
+        //ML7345_Write_Reg(0x00,0x11);    // Bank0 Set
         ML7345_SetAndGet_State(RX_ON);
         CG2214M6_USE_R;
         Flag_rx_pream = 0;

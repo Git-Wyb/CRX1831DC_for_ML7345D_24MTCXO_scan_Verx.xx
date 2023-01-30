@@ -64,7 +64,7 @@ void main(void)
     ClearWDT();        // Service the WDT */
     SPI_Config_Init();
     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
-    RF_ML7345_Init(Fre_426_075,0x55,12);
+    RF_ML7345_Init(Fre_426_075,0x15,12);
     UART1_INIT();      // UART1 for PC Software
     TIME_power_led=500;
     ClearWDT();        // Service the WDT
@@ -86,10 +86,10 @@ void main(void)
         if (time_Login_exit_256 == 0)
             ID_Decode_OUT();
         ID_learn();
-		if(ID_SCX1801_DATA!=0)APP_TX_PACKET();
+		//if(ID_SCX1801_DATA!=0)APP_TX_PACKET();
         if(FLAG_APP_RX==1)
         {
-    		  ML7345D_Freq_Scanning();
+    		  //ML7345D_Freq_Scanning();
 			  SCAN_RECEIVE_PACKET(); //É¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
         }
         TranmissionACK();
