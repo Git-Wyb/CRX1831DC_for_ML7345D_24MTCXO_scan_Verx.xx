@@ -188,7 +188,6 @@ u8 SPI1_SendRecv_Data(u8 byte)
     while (!(SPI1_SR & 0x01))   //8us结束/* 等待接受寄存器满 */
     {
         if(timeout_cnt++ >= 200)    break;     //Time Out 约149us
-        ClearWDT();
     }
     timeout_cnt = 0;
     dat = SPI1_DR;
