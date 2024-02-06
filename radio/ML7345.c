@@ -64,17 +64,15 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
 {
     ML7345_RESETN_SET();    /* Hardware Reset */
     ML7345_Write_Reg(0x00,0x11);
-    ML7345_Write_Reg(0x53,0x00);
     ML7345_Write_Reg(0x03,0xC3);
+    ML7345_Write_Reg(0x53,0x00);
     while(1){
         if(ML7345_Read_Reg(0x0Du)&0x01u){   /* Wait Clock stabilization completion */
             break;
         }
     }
     ML7345_Write_Reg(0x00,0x11);    /* Bank0 Set */
-    ML7345_Write_Reg(0x01,0xff);    /* Software Reset */
     ML7345_Write_Reg(0x02,0x9f);    /* Clk Enable */
-    ML7345_Write_Reg(0x03,0xc3);    /* TCXO_EN */
     ML7345_Write_Reg(0x04,0x03);    /* MSB first,Format D (non Wireless M-Bus, general purpose format) */
     ML7345_Write_Reg(0x05,0x10);    /* CRC Disable,Length field 1-byte mode */
     ML7345_Write_Reg(0x06,0x00);    /* Data Rate: 0x00 1.2kbps; 0x22 4.8kbps */

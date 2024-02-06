@@ -184,12 +184,12 @@ u8 SPI1_SendRecv_Data(u8 byte)
 
     SPI1_DR = byte; /* 将发送的数据写到数据寄存器 */
     __asm("nop");//163.9ns
-    timeout_cnt = 0;
+
     while (!(SPI1_SR & 0x01))   //8us结束/* 等待接受寄存器满 */
     {
-        if(timeout_cnt++ >= 200)    break;     //Time Out 约149us
+        ;
     }
-    timeout_cnt = 0;
+
     dat = SPI1_DR;
     return dat;
 }
