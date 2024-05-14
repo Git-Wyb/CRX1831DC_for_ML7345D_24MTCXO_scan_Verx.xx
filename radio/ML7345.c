@@ -112,8 +112,8 @@ void RF_ML7345_Init(u8* freq,u8 sync,u8 rx_len)
     ML7345_Write_Reg(0x4f,0x00);    /* GPIO1 [output] “L” level,Upon reset,disable GPIO1 pin is CLK_OUT function */
     ML7345_Write_Reg(0x50,0x00);    /* GPIO2 [output] “L” level */
     ML7345_Write_Reg(0x51,0x00);    /* GPIO3 [output] “L” level */
-
-    ML7345_Write_Reg(0x54,0x14);    /* Channel filter bandwidth setting */
+                                    /*{Master clock frequency * (CHFIL_WIDE_SET+1)}/ (Setting value * 120}*/
+    ML7345_Write_Reg(0x54,0x14);    /* Channel filter bandwidth setting:10k = [24MHz * (0+1) / (20*120)] */
 
     ML7345_Write_Reg(0x60,0x06); /* Decimation gain setting 提高灵敏度 */
 
@@ -645,9 +645,9 @@ void ML7345d_Change_Channel(void)
             case 1:
                     Radio_Date_Type = 1;
                     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
-                    ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);       //加上VCO校准后用时5ms，不加1.2ms
+                    //ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);       //加上VCO校准后用时5ms，不加1.2ms
                     if(ID_SCX1801_DATA == 0) Channels = 1;
-                    else Channels = 2;
+                    else Channels = 1;
                     break;
 
             case 2:
@@ -691,8 +691,8 @@ void ML7345D_Freq_Scanning(void)
             else if(PROFILE_CH_FREQ_32bit_200002EC == 429350000) RF_ML7345_Init(Fre_429_350,0x55,28);
             else if(PROFILE_CH_FREQ_32bit_200002EC == 429550000) RF_ML7345_Init(Fre_429_550,0x55,28);
             ML7345_GPIO2RxDoneInt_Enable();
+            ML7345_SetAndGet_State(RX_ON);
         }
-        ML7345_SetAndGet_State(RX_ON);
         CG2214M6_USE_R;
 
         if(Radio_Date_Type==1)

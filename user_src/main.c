@@ -77,16 +77,17 @@ void main(void)
 	FLAG_testBEEP=0;
     ML7345_SetAndGet_State(RX_ON);
     CG2214M6_USE_R;
-
+    Channels = 1;
     while (1)
     {
+        Radio_Date_Type = 1;
         ClearWDT(); // Service the WDT
         if(FLAG_testBEEP!=0)TEST_beep();
 
         if (time_Login_exit_256 == 0)
             ID_Decode_OUT();
         ID_learn();
-		if(ID_SCX1801_DATA!=0)APP_TX_PACKET();
+		//if(ID_SCX1801_DATA!=0)APP_TX_PACKET();
         if(FLAG_APP_RX==1)
         {
     		  ML7345D_Freq_Scanning();
