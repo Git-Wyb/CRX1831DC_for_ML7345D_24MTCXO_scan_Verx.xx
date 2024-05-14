@@ -44,7 +44,7 @@ u8 ML7345_SetAndGet_State(RF_StatusSet_ENUM sta)
             {
                 ML7345_Frequency_Calcul(PROFILE_CH_FREQ_32bit_200002EC,Freq_SetBuff);
                 ClearWDT();
-                if(PROFILE_CH_FREQ_32bit_200002EC < 429000000)  RF_ML7345_Init(Freq_SetBuff,0x55,12);
+                if(Radio_Date_Type == 1)  RF_ML7345_Init(Freq_SetBuff,0x55,12);
                 else    RF_ML7345_Init(Freq_SetBuff,0x55,28);
                 ClearWDT();
                 ML7345_Write_Reg(ADDR_RF_STATUS,sta);

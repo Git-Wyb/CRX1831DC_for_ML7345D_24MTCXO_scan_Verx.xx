@@ -30,6 +30,7 @@ void ML7345d_Change_Channel(void);
 void ML7345D_Freq_Scanning(void);
 void ML7345D_RF_test_mode(void);
 void TX_DataLoad_HighSpeed(u32 IDCache, Wireless_Body CtrCmd, u8 *Packet);
+void TX_DataLoad(u32 IDCache, u8 CtrCmd, u8 *Packet);
 void ML7345D_Error_Detect(void);
 void Ber_PinExit_Init(void);
 

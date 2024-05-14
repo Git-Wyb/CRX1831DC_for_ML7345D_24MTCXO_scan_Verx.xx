@@ -52,6 +52,16 @@ void ID_Decode_IDCheck(void)
                 FLAG_IDCheck_OK = 0;
 			    if(Radio_Date_Type_bak==1)
 			    {
+                    if(PROFILE_CH_FREQ_32bit_200002EC == 429175000 || PROFILE_CH_FREQ_32bit_200002EC == 429200000)   // APP
+                    {
+                        Flag_PROFILE_RxLowSpeed_TYPE = 1;    // 429
+                    }
+                    else if(PROFILE_CH_FREQ_32bit_200002EC == 426075000)   //STX
+                    {
+                        Flag_PROFILE_RxLowSpeed_TYPE = 0;
+                    }
+                    if(Flag_PROFILE_RxLowSpeed_TYPE == 0)   //426
+                    {
 		                if (DATA_Packet_ID == 0xFFFFFE)
 		                    DATA_Packet_Control = DATA_Packet_Contro_buf; //2015.3.24修正 Control缓存�?ID判断是否学习过后才能使用
 
@@ -131,6 +141,24 @@ void ID_Decode_IDCheck(void)
 		                    FG_Receiver_LED_RX = 1;
 		                }
 			    }
+                else if(Flag_PROFILE_RxLowSpeed_TYPE == 1)  //429ä˝é
+                {
+                   FG_auto_out = 0;
+                    TIME_auto_close = 0;
+                    FG_auto_open_time = 0;
+                    if (FG_auto_manual_mode == 1)      //Manual_override_TIMER=13500;   //2刿0秒自动无敿
+                        Manual_override_TIMER = 27200;//5 Minutes.  24480; //4刿0秒自动无敿
+                    if ((DATA_Packet_Control & 0x14) == 0x14)
+                    {
+                        if (TIMER1s == 0)
+                            TIMER1s = 3800 - 30;
+                    }
+                    else if(FLAG_testNo91==1) TIMER1s = 600;
+                    else TIMER1s = 1000;
+                   FLAG_APP_TX_once = 1;
+                   FG_Receiver_LED_RX = 1;
+                }
+			  }  /*
 				else if(Radio_Date_Type_bak==2)
 				{
 				   DATA_Packet_Control=0;
@@ -146,7 +174,7 @@ void ID_Decode_IDCheck(void)
 					FLAG_APP_TX_once=1;
                     TIMER300ms = 100;
 		            FG_Receiver_LED_RX = 1;
-				}
+				} */
             }
 
 
@@ -568,7 +596,7 @@ void ID_Decode_OUT(void)
 		 }
 
          if(((DATA_Packet_Control==0x00)||(DATA_Packet_Control==0x02)||(DATA_Packet_Control==0x04)||(DATA_Packet_Control==0x08)||(DATA_Packet_Control==0x01)
-               ||(DATA_Packet_Control==0x20)||(DATA_Packet_Control==0x40)||((FLAG__Semi_open_T==1)||(FLAG__Semi_close_T==1)))&&(FLAG_APP_TX_fromOUT==0)&&(Radio_Date_Type_bak==2)&&(FLAG_APP_TX==0)&&(FLAG_APP_TX_once==1))
+               ||(DATA_Packet_Control==0x20)||(DATA_Packet_Control==0x40)||((FLAG__Semi_open_T==1)||(FLAG__Semi_close_T==1)))&&(FLAG_APP_TX_fromOUT==0)&&(Flag_PROFILE_RxLowSpeed_TYPE==1)&&(FLAG_APP_TX==0)&&(FLAG_APP_TX_once==1))
          {
              FLAG_APP_TX_fromOUT=1;
 			 if(DATA_Packet_Control==0x00)TIME_APP_TX_fromOUT=35;//15+DEF_APP_TX_freq*8;  //350ms

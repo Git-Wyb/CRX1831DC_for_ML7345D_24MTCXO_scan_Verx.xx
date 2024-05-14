@@ -540,17 +540,25 @@ void OprationFrame(void)
 		switch (Databits_t.Statues)
 		{
 		case 1:
-		case 2:
-		case 3:
-		case 4:
-		case 5:
-		case 6:
-			break;
-		default:
+        case 5:
+             Struct_DATA_Packet_Contro_fno = Tx_Open_Status;
+             break;
+        case 2:
+            Struct_DATA_Packet_Contro_fno = Tx_Close_Status;
+            break;
+        case 0x53:
+            Struct_DATA_Packet_Contro_fno = Tx_Open_Action_Status;
+            break;
+        case 0x54:
+            Struct_DATA_Packet_Contro_fno = Tx_Close_Action_Status;
+            break;
+        default:
+            Struct_DATA_Packet_Contro_fno = Tx_Open_Status;
 			ACKBack[2] = 1;
 			return;
 			break;
 		}
+        if(Databits_t.Abnormal!=0) Struct_DATA_Packet_Contro_fno = Tx_Abnormal_Status;
 		switch (Databits_t.Abnormal)
 		{
 		case 0x00:

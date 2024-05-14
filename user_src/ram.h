@@ -10,7 +10,7 @@
 //#define DEF_test_MAX_32pcs
 extern u8 DEF_APP_TX_freq;
 
-
+#define DEF_TX_TIMEOUT  250 //ms
 
 extern uFLAG FLAG_test1;
 //************************************************
@@ -182,6 +182,8 @@ extern u32 PROFILE_RADIO_DATA_RATE_32bit_200002FC;
 extern u32 PROFILE_GENERIC_PKT_FRAME_CFG1_32bit_20000500;
 extern const u32 PROFILE_CH1_FREQ_32bit_429HighSpeed;
 extern const u32 PROFILE_CH2_FREQ_32bit_429HighSpeed;
+extern const u32 PROFILE_CH3_FREQ_32bit_429LowSpeed;
+extern const u32 PROFILE_CH4_FREQ_32bit_429LowSpeed;
 extern u8 Channels;
 
 
@@ -256,6 +258,21 @@ extern Mark_Un mark1_stu;
 #define Flag_test_fm     mark1_stu.un_var_bit1
 #define Flag_test_rssi   mark1_stu.un_var_bit2
 #define Flag_test_pc     mark1_stu.un_var_bit3
+#define Flag_PROFILE_RxLowSpeed_TYPE     mark1_stu.un_var_bit4
 
+#define Tx_No_Status           0xD0  /* ć˛Ąćçść */
+#define Tx_Open_Status         0xD1  /* ĺźçść */
+#define Tx_Close_Status        0xD2  /* é­çść */
+#define Tx_Open_Action_Status  0xD3  /* ĺźĺ¨ä˝ä¸­çść */
+#define Tx_Close_Action_Status 0xD4  /* é­ĺ¨ä˝ä¸­çść */
+#define Tx_Open_Action_Auto    0xD5  /* ĺźĺ¨ä˝ä¸­çść(čŞĺ¨ĺäżĄćś) */
+#define Tx_Close_Action_Auto   0xD6  /* é­ĺ¨ä˝ä¸­çść(čŞĺ¨ĺäżĄćś) */
+#define Tx_Abnormal_Status     0xD7  /* ĺźĺ¸¸1çść */
+#define Tx_Setting_Status      0xD8  /* ćśé´čŽžĺŽĺčé¸Łĺ¨ON/OFFčŽžĺŽćś,éäżĄ */
+#define Tx_Open_StatusNG       0xD9  /* ĺźçść(ć ć),čŞĺ¨äżĄĺˇć ćççść */
+#define Tx_Close_StatusNG      0xDA  /* é­çść(ć ć),čŞĺ¨äżĄĺˇć ćççść */
+#define Tx_Open_Action_StatusNG     0xDB  /* ĺźĺ¨ä˝ä¸­(ć ć),čŞĺ¨äżĄĺˇć ćççść */
+#define Tx_Close_Action_StatusNG    0xDC  /* é­ĺ¨ä˝ä¸­(ć ć),čŞĺ¨äżĄĺˇć ćççść */
+#define Tx_Abnormal_StatusNG        0xDD
 
 #endif
