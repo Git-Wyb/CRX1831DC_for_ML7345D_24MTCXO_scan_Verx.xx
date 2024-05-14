@@ -645,16 +645,16 @@ void ML7345d_Change_Channel(void)
             case 1:
                     Radio_Date_Type = 1;
                     PROFILE_CH_FREQ_32bit_200002EC = 426075000;
-                    //ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);       //加上VCO校准后用时5ms，不加1.2ms
+                    ML7345_Frequency_Set(Fre_426_075,Radio_Date_Type);       //加上VCO校准后用时5ms，不加1.2ms
                     if(ID_SCX1801_DATA == 0) Channels = 1;
-                    else Channels = 1;
+                    else Channels = 2;
                     break;
 
             case 2:
                     Radio_Date_Type = 2;
                     PROFILE_CH_FREQ_32bit_200002EC = PROFILE_CH1_FREQ_32bit_429HighSpeed;
-                    ML7345_Frequency_Set(Fre_429_350,Radio_Date_Type);
-                    Channels = 3;
+                    //ML7345_Frequency_Set(Fre_429_350,Radio_Date_Type);
+                    Channels = 2;
                     break;
 
             case 3:
