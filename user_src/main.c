@@ -77,10 +77,10 @@ void main(void)
 	FLAG_testBEEP=0;
     ML7345_SetAndGet_State(RX_ON);
     CG2214M6_USE_R;
-    Channels = 2;
+    Channels = 1;
     while (1)
     {
-        Radio_Date_Type = 2;
+        Radio_Date_Type = 1;
         ClearWDT(); // Service the WDT
         if(FLAG_testBEEP!=0)TEST_beep();
 
