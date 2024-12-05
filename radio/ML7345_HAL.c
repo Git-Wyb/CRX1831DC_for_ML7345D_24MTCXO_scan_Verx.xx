@@ -126,13 +126,13 @@ void ML7345_DataRate_Set_4_8k(void)//(DataRate_ENUM rate)
     ML7345_Write_Reg(0x13,0x0C);
     ML7345_Write_Reg(0x2F,0x08);
     ML7345_Write_Reg(0x56,0x50);
-    ML7345_Write_Reg(0x57,0x40);
+    ML7345_Write_Reg(0x57,0x04);
     ML7345_Write_Reg(0x58,0x01);
     ML7345_Write_Reg(0x59,0x14);
     ML7345_Write_Reg(0x5A,0x00);
     ML7345_Write_Reg(0x5B,0x00);
     ML7345_Write_Reg(0x5C,0x15);
-    ML7345_Write_Reg(0x5D,0x0D);
+    ML7345_Write_Reg(0x5D,0x14);
     ML7345_Write_Reg(0x5E,0x05);
     ML7345_Write_Reg(0x5F,0x67);
     ML7345_Write_Reg(0x60,0x09);
@@ -586,7 +586,7 @@ void SetReg_Rssi(void)
     ML7345_Write_Reg(0x0C,0x8A);
     ML7345_Write_Reg(0x0D,0x26);
     ML7345_Write_Reg(0x10,0x03);
-    ML7345_Write_Reg(0x15,0x83);
+    ML7345_Write_Reg(0x15,0x03);
     ML7345_Write_Reg(0x00,0x11);  //Bank 0
 }
 
